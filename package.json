@@ -12,17 +12,14 @@
     "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
     "test": "vitest run"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MonsieurDahlstrom/pulumi-azure.git"
-  },
+  "repository": "https://github.com/monsieurdahlstrom/pulumi-azure.git",
   "keywords": [
     "pulumi",
     "azure",
     "iac"
   ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "@monsieurdahlstrom:registry": "https://npm.pkg.github.com"
   },
   "author": "Mathias Dahlström",
   "license": "UNLICENSED",
