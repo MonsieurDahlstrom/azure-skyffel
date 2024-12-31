@@ -1,0 +1,40 @@
+{
+  "name": "pulumi-azure",
+  "version": "0.1.0",
+  "description": "opinionated pulumi library to generate common azure resources",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "ci": "npm run build",
+    "format": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MonsieurDahlstrom/pulumi-azure.git"
+  },
+  "keywords": [
+    "pulumi",
+    "azure",
+    "iac"
+  ],
+  "author": "Mathias Dahlström",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/MonsieurDahlstrom/pulumi-azure/issues"
+  },
+  "homepage": "https://github.com/MonsieurDahlstrom/pulumi-azure#readme",
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "semantic-release": "^24.2.0",
+    "typescript": "^5.7.2"
+  },
+  "release": {
+    "branches": [
+      "main",
+      {
+        "name": "next",
+        "prerelease": "beta"
+      }
+    ]
+  }
+}
