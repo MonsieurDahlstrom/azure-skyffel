@@ -43,5 +43,8 @@
         "prerelease": "beta"
       }
     ]
+  },
+  "dependencies": {
+    "@pulumi/azure-native": "^2.79.0"
   }
 }
