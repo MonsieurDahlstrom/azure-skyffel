@@ -2,8 +2,8 @@
   "name": "@monsieurdahlstrom/pulumi-azure",
   "version": "0.1.0",
   "description": "opinionated pulumi library to generate common azure resources",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "rm -rf dist && tsc && cp package.json dist",
@@ -47,18 +47,14 @@
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
-      ["@semantic-release/npm", { "pkgRoot": "./dist" }],
-      ["@semantic-release/github", {
-        "assets": [
-          "package.json",
-          "README.md",
-          "CHANGELOG.md",
-          "dist/**/*.{js}"
-        ],
-        "message": "chore: Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-      }]
+      "@semantic-release/npm",
+      "@semantic-release/github"
     ]
   },
+  "files": [
+    "dist/**/*.js",
+    "package.json"
+  ],
   "dependencies": {
     "@pulumi/azure-native": "^2.79.0"
   }
