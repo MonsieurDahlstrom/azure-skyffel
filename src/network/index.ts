@@ -6,9 +6,9 @@ import {
 } from '@pulumi/azure-native/network';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 */
-import azure = require('@pulumi/azure-native');
+import azure from '@pulumi/azure-native';
 
-function createNetwork(
+export function createNetwork(
   resourceGroup: azure.resources.ResourceGroup,
   name: string,
   cidr: string,
@@ -22,7 +22,7 @@ function createNetwork(
   return vnet;
 }
 
-function createSnets(
+export function createSnets(
   snets: Map<string, azure.network.SubnetArgs>,
 ): Map<string, azure.network.Subnet> {
   const subnets = new Map<string, azure.network.Subnet>();
@@ -32,5 +32,3 @@ function createSnets(
   }
   return subnets;
 }
-
-export = { createNetwork, createSnets };
