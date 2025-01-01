@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "opinionated pulumi library to generate common azure resources",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "tsc",
@@ -42,6 +43,20 @@
         "name": "next",
         "prerelease": "beta"
       }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      ["@semantic-release/github", {
+        "assets": [
+          "package.json",
+          "README.md",
+          "CHANGELOG.md",
+          "dist/**/*.{js}"
+        ],
+        "message": "chore: Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }]
     ]
   },
   "dependencies": {
