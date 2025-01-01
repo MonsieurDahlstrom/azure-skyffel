@@ -1,4 +1,4 @@
-import azure from '@pulumi/azure-native';
+import * as azure from '@pulumi/azure-native';
 export type AksInput = {
   resourceGroup: azure.resources.ResourceGroup;
   vnet: azure.network.VirtualNetwork;

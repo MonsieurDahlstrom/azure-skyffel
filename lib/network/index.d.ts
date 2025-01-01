@@ -1,4 +1,4 @@
-import azure from '@pulumi/azure-native';
+import * as azure from '@pulumi/azure-native';
 export declare function createNetwork(
   resourceGroup: azure.resources.ResourceGroup,
   name: string,
