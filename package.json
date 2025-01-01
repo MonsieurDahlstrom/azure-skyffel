@@ -2,12 +2,12 @@
   "name": "@monsieurdahlstrom/pulumi-azure",
   "version": "0.1.0",
   "description": "opinionated pulumi library to generate common azure resources",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.js",
   "type": "module",
   "scripts": {
-    "build": "rm -rf dist && tsc && cp package.json dist",
-    "ci": "npm run build && npm run check-format && npm run check-exports && npm run test",
+    "build": "rm -rf lib && tsc",
+    "ci": "npm run build && npm run format && npm run check-exports && npm run test",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
@@ -52,7 +52,7 @@
     ]
   },
   "files": [
-    "dist/**/*.js",
+    "lib/**",
     "package.json"
   ],
   "dependencies": {
