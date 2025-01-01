@@ -1,7 +1,2 @@
-import { createNetwork, createSnets } from './network';
-declare const _default: {
-  createNetwork: typeof createNetwork;
-  createSubnets: typeof createSnets;
-};
-export = _default;
+export { createNetwork, createSnets } from './network';
 //# sourceMappingURL=index.d.ts.map
