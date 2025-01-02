@@ -4,7 +4,13 @@ export declare function createNetwork(
   name: string,
   cidr: string,
 ): azure.network.VirtualNetwork;
-export declare function createSnets(
+export declare function createSubnets(
   snets: Map<string, azure.network.SubnetArgs>,
 ): Map<string, azure.network.Subnet>;
+export declare function cidrSubnet(
+  iprange: string,
+  newbits: number,
+  netnum: number,
+): string;
+export declare function cidrHost(iprange: string, hostnum: number): string;
 //# sourceMappingURL=index.d.ts.map

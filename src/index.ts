@@ -1,1 +1,6 @@
-export { createNetwork, createSnets } from './network/index.js';
+export {
+  createNetwork,
+  createSubnets,
+  cidrHost,
+  cidrSubnet,
+} from './network/index.js';

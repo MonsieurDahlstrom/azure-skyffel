@@ -30,6 +30,7 @@
   "homepage": "https://github.com/MonsieurDahlstrom/pulumi-azure#readme",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.2",
+    "@types/jsbn": "^1.2.33",
     "@types/node": "^22.10.2",
     "prettier": "^3.4.2",
     "semantic-release": "^24.2.0",
@@ -56,6 +57,7 @@
     "package.json"
   ],
   "dependencies": {
-    "@pulumi/azure-native": "^2.79.0"
+    "@pulumi/azure-native": "^2.79.0",
+    "jsbn": "^1.1.0"
   }
 }
