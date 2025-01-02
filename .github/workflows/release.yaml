@@ -8,8 +8,6 @@ on:
 permissions:
   contents: read # for checkout
 
-working-directory: nodejs
-
 jobs:
   release:
     name: Release
