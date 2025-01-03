@@ -4,13 +4,9 @@ import * as azapi from '@ediri/azapi';
 
 const githubNetworkDelegations = [
   {
-    name: 'github-network-delegation',
-    service_delegation: [
-      {
-        actions: ['Microsoft.Network/virtualNetworks/subnets/join/action'],
-        name: 'GitHub.Network/networkSettings',
-      },
-    ],
+    name: 'github-network-settings',
+    actions: ['Microsoft.Network/virtualNetwork/join/action'],
+    serviceName: 'Github.Network/networkSettings',
   },
 ];
 
