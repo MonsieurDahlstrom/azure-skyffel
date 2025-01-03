@@ -59,6 +59,8 @@
   "dependencies": {
     "@ediri/azapi": "^1.12.2",
     "@pulumi/azure-native": "^2.79.0",
+    "@pulumi/cloudflare": "^5.46.0",
+    "@pulumi/random": "^4.16.8",
     "jsbn": "^1.1.0"
   }
 }
