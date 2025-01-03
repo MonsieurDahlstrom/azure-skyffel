@@ -4,7 +4,7 @@
   "description": "opinionated pulumi library to generate common azure resources",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build": "rm -rf lib && tsc",
     "ci": "npm run build && npm run format",
