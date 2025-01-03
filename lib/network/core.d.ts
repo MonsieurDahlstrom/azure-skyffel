@@ -13,4 +13,4 @@ export declare function cidrSubnet(
   netnum: number,
 ): string;
 export declare function cidrHost(iprange: string, hostnum: number): string;
-//# sourceMappingURL=index.d.ts.map
+//# sourceMappingURL=core.d.ts.map

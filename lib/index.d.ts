@@ -3,6 +3,6 @@ export {
   createSubnets,
   cidrHost,
   cidrSubnet,
-} from './network/index.js';
+} from './network/core.js';
 export { createGithubRunnerSubnet } from './network/github-runners.js';
 //# sourceMappingURL=index.d.ts.map
