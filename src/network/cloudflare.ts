@@ -25,7 +25,9 @@ export function createCloudflareZTNASubnet(
   );
   const nsg = new azure.network.NetworkSecurityGroup('cloudflare-ztna-nsg', {
     resourceGroupName: resourceGroup.name,
+    location: resourceGroup.location,
     securityRules: [
+      /*
       {
         name: 'allow-ztna-ssh',
         access: 'Allow',
@@ -62,6 +64,7 @@ export function createCloudflareZTNASubnet(
         description: 'Allow Outbound HTTPS traffic',
         priority: 120,
       },
+      */
     ],
   });
   return [subnet, nsg, routeTable];
