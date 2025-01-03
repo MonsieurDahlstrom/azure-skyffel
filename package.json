@@ -57,6 +57,7 @@
     "package.json"
   ],
   "dependencies": {
+    "@ediri/azapi": "^1.12.2",
     "@pulumi/azure-native": "^2.79.0",
     "jsbn": "^1.1.0"
   }
