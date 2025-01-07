@@ -4,15 +4,11 @@ import * as azure from '@pulumi/azure-native';
 import * as random from '@pulumi/random';
 import { cidrHost } from '../network/core.js';
 
-export async function createCloudflareConnector(
+export function createCloudflareConnector(
   resourceGroup: azure.resources.ResourceGroup,
   subnet: azure.network.Subnet,
   token: string,
-): Promise<[virtualMachine: azure.compute.VirtualMachine]> {
-  let addressPrefix = '';
-  await subnet.addressPrefix.apply((addressPrefixValue) => {
-    if (addressPrefixValue != undefined) addressPrefix = addressPrefixValue;
-  });
+): azure.compute.VirtualMachine {
   const networkInterface = new azure.network.NetworkInterface(
     'cloudflare-connector-nic',
     {
@@ -26,7 +22,7 @@ export async function createCloudflareConnector(
             id: subnet.id,
           },
           privateIPAllocationMethod: 'Static',
-          privateIPAddress: cidrHost(addressPrefix, 4),
+          privateIPAddress: cidrHost(subnet.addressPrefix.toString(), 4),
         },
       ],
     },
@@ -100,7 +96,7 @@ export async function createCloudflareConnector(
         warp-cli --accept-tos connect`),
       },
     });
-  return [virtualMachine];
+  return virtualMachine;
 }
 
 function b64Encode(str: string): string {

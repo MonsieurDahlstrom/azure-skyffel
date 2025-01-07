@@ -37,5 +37,6 @@
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "skipDefaultLibCheck": false
-  }
+  },
+  "exclude": ["src/**/*.test.ts"]
 }
