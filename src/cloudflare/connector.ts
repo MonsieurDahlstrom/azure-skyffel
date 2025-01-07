@@ -22,7 +22,7 @@ export function createCloudflareConnector(
             id: subnet.id,
           },
           privateIPAllocationMethod: 'Static',
-          privateIPAddress: cidrHost(subnet.addressPrefix.toString(), 4),
+          privateIPAddress: cidrHost(subnet.addressPrefix.get()!, 4),
         },
       ],
     },
