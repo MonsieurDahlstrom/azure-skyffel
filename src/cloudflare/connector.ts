@@ -6,7 +6,7 @@ import { cidrHost } from '../network/core.js';
 
 export function createCloudflareConnector(
   resourceGroup: azure.resources.ResourceGroup,
-  subnet: azure.network.Subnet,
+  subnet: { id: string; addressPrefix: string },
   token: string,
 ): azure.compute.VirtualMachine {
   const networkInterface = new azure.network.NetworkInterface(
@@ -22,7 +22,7 @@ export function createCloudflareConnector(
             id: subnet.id,
           },
           privateIPAllocationMethod: 'Static',
-          privateIPAddress: cidrHost(subnet.addressPrefix.get()!, 4),
+          privateIPAddress: cidrHost(subnet.addressPrefix, 4),
         },
       ],
     },
