@@ -1,12 +1,13 @@
 import * as azure from '@pulumi/azure-native';
 export type AksInput = {
+  name: string;
   resourceGroup: azure.resources.ResourceGroup;
   vnet: azure.network.VirtualNetwork;
   nodes: azure.network.Subnet;
   pods?: azure.network.Subnet;
   defaultNode: {
-    min: string;
-    max: string;
+    min: number;
+    max: number;
     vmSize: string;
     zones: string[];
   };
@@ -15,5 +16,7 @@ export type AksInput = {
     [key: string]: string;
   };
 };
-export declare function createAks(input: AksInput): void;
-//# sourceMappingURL=index.d.ts.map
+export declare function createAKS(
+  input: AksInput,
+): azure.containerservice.ManagedCluster;
+//# sourceMappingURL=core.d.ts.map

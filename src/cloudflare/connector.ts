@@ -8,6 +8,7 @@ export function createCloudflareConnector(
   resourceGroup: azure.resources.ResourceGroup,
   subnet: { id: string; addressPrefix: string },
   token: string,
+  user: { username: string; password: string } | undefined,
 ): azure.compute.VirtualMachine {
   const networkInterface = new azure.network.NetworkInterface(
     'cloudflare-connector-nic',
@@ -49,8 +50,8 @@ export function createCloudflareConnector(
         ],
       },
       osProfile: {
-        adminUsername: 'cloudflared',
-        adminPassword: password.result,
+        adminUsername: user ? user.username : 'cloudflared',
+        adminPassword: user ? user.password : password.result,
         computerName: 'cloudflare-connector',
         linuxConfiguration: {
           patchSettings: {

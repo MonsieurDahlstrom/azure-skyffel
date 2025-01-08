@@ -6,5 +6,11 @@ export declare function createCloudflareConnector(
     addressPrefix: string;
   },
   token: string,
+  user:
+    | {
+        username: string;
+        password: string;
+      }
+    | undefined,
 ): azure.compute.VirtualMachine;
 //# sourceMappingURL=connector.d.ts.map
