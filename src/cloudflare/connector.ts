@@ -40,6 +40,11 @@ export function createCloudflareConnector(
       hardwareProfile: {
         vmSize: azure.compute.VirtualMachineSizeTypes.Standard_B2ms,
       },
+      diagnosticsProfile: {
+        bootDiagnostics: {
+          enabled: true,
+        },
+      },
       resourceGroupName: resourceGroup.name,
       location: resourceGroup.location,
       networkProfile: {
