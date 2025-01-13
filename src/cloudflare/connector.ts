@@ -53,11 +53,33 @@ export function createCloudflareConnector(
         adminUsername: user ? user.username : 'cloudflared',
         adminPassword: user ? user.password : password.result,
         computerName: 'cloudflare-connector',
+        customData: b64Encode(`#cloud-config
+apt:
+  sources:
+    cloudflare:
+      source: deb [arch="amd64"] https://pkg.cloudflareclient.com/ $RELEASE main
+      keyid: 6E2DD2174FA1C3BA
+      keyserver: 'https://pkg.cloudflareclient.com/pubkey.gpg'
+package_update: true
+packages:
+  - cloudflare-warp
+runcmd:
+  - sudo sysctl -w net.ipv4.ip_forward=1
+  - warp-cli --accept-tos connector new ${token}
+  - warp-cli --accept-tos connect
+          `),
         linuxConfiguration: {
           patchSettings: {
             patchMode: azure.compute.LinuxVMGuestPatchMode.ImageDefault,
           },
           provisionVMAgent: true,
+        },
+      },
+      securityProfile: {
+        securityType: azure.compute.SecurityTypes.TrustedLaunch,
+        uefiSettings: {
+          secureBootEnabled: true,
+          vTpmEnabled: true,
         },
       },
       storageProfile: {
@@ -78,7 +100,8 @@ export function createCloudflareConnector(
       },
     },
   );
-  //const virtualMachineEntraExtension = new azure.compute.VirtualMachineExtension('virtualMachineExtension', {});
+  /*
+  const virtualMachineEntraExtension = new azure.compute.VirtualMachineExtension('virtualMachineExtension', {});
   const virtualMachineCloudflareExtension =
     new azure.compute.VirtualMachineExtension('cloudflared', {
       vmName: virtualMachine.name,
@@ -97,6 +120,7 @@ export function createCloudflareConnector(
         warp-cli --accept-tos connect`),
       },
     });
+  */
   return [virtualMachine, networkInterface];
 }
 
