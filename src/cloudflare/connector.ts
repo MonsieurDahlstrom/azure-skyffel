@@ -9,7 +9,7 @@ export function createCloudflareConnector(
   subnet: { id: string; addressPrefix: string },
   token: string,
   user: { username: string; password: string } | undefined,
-): azure.compute.VirtualMachine {
+): [azure.compute.VirtualMachine, azure.network.NetworkInterface] {
   const networkInterface = new azure.network.NetworkInterface(
     'cloudflare-connector-nic',
     {
@@ -97,7 +97,7 @@ export function createCloudflareConnector(
         warp-cli --accept-tos connect`),
       },
     });
-  return virtualMachine;
+  return [virtualMachine, networkInterface];
 }
 
 function b64Encode(str: string): string {

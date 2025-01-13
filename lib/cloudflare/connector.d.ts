@@ -12,5 +12,5 @@ export declare function createCloudflareConnector(
         password: string;
       }
     | undefined,
-): azure.compute.VirtualMachine;
+): [azure.compute.VirtualMachine, azure.network.NetworkInterface];
 //# sourceMappingURL=connector.d.ts.map
