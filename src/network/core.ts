@@ -6,11 +6,15 @@ export function createNetwork(
   resourceGroup: azure.resources.ResourceGroup,
   name: string,
   cidr: string,
+  dnsServers?: string[],
 ): azure.network.VirtualNetwork {
   const vnet = new azure.network.VirtualNetwork(name, {
     resourceGroupName: resourceGroup.name,
     addressSpace: {
       addressPrefixes: [cidr],
+    },
+    dhcpOptions: {
+      dnsServers: dnsServers ? dnsServers : ['AzureProvidedDNS'],
     },
   });
   return vnet;

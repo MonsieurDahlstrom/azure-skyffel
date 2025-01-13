@@ -3,6 +3,7 @@ export declare function createNetwork(
   resourceGroup: azure.resources.ResourceGroup,
   name: string,
   cidr: string,
+  dnsServers?: string[],
 ): azure.network.VirtualNetwork;
 export declare function createSubnets(
   snets: Map<string, azure.network.SubnetArgs>,
