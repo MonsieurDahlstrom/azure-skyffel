@@ -14,7 +14,7 @@ export function createNetwork(
       addressPrefixes: [cidr],
     },
     dhcpOptions: {
-      dnsServers: dnsServers ? dnsServers : ['AzureProvidedDNS'],
+      dnsServers: dnsServers,
     },
   });
   return vnet;
