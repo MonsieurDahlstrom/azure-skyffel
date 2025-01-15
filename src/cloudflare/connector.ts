@@ -1,4 +1,3 @@
-import * as pulumi from '@pulumi/pulumi';
 import { Output } from '@pulumi/pulumi';
 
 import * as cloudflare from '@pulumi/cloudflare';
@@ -25,7 +24,7 @@ export let networkInterface: NetworkInterface | undefined;
 export type CloudflareConnectorInput = {
   user: {
     username: string;
-    password: string;
+    password: Output<string>;
   };
   subnet: Subnet;
   resourceGroup: ResourceGroup;
