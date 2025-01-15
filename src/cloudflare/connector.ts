@@ -19,35 +19,35 @@ import { ResourceGroup } from '@pulumi/azure-native/resources';
 import * as random from '@pulumi/random';
 import { cidrHost } from '../network/core.js';
 
-function GetValue<T>(output: Output<T>) {
-  return new Promise<T>((resolve, reject) => {
-    output.apply((value) => {
-      resolve(value);
-    });
-  });
-}
+export let virtualMachine: VirtualMachine | undefined;
+export let networkInterface: NetworkInterface | undefined;
 
-export async function createCloudflareConnector(
-  resourceGroup: ResourceGroup,
-  subnet: Subnet,
-  token: string,
-  user: { username: string; password: string } | undefined,
-): Promise<[VirtualMachine, NetworkInterface]> {
+export type CloudflareConnectorInput = {
+  user: {
+    username: string;
+    password: string;
+  };
+  subnet: Subnet;
+  resourceGroup: ResourceGroup;
+  tunnelToken: string;
+};
+export async function setup(input: CloudflareConnectorInput): Promise<boolean> {
   const addressPrefix = await GetValue(
-    subnet.addressPrefix.apply((prefix) => prefix),
+    input.subnet.addressPrefix.apply((prefix) => prefix),
   );
   if (!addressPrefix) throw new Error('Subnet address prefix not found');
-  const networkInterface = new NetworkInterface(
+  //create nic
+  networkInterface = new NetworkInterface(
     'cloudflare-connector-nic',
     {
-      resourceGroupName: resourceGroup.name,
-      location: resourceGroup.location,
+      resourceGroupName: input.resourceGroup.name,
+      location: input.resourceGroup.location,
       enableIPForwarding: true,
       ipConfigurations: [
         {
           name: 'internal',
           subnet: {
-            id: subnet.id,
+            id: input.subnet.id,
           },
           privateIPAllocationMethod: 'Static',
           privateIPAddress: cidrHost(addressPrefix, 4),
@@ -55,15 +55,11 @@ export async function createCloudflareConnector(
       ],
     },
     {
-      dependsOn: [subnet],
+      dependsOn: [input.subnet],
     },
   );
-  const password = new random.RandomPassword('password', {
-    length: 16,
-    special: true,
-    overrideSpecial: '!#$%&*()-_=+[]{}<>:?',
-  });
-  const virtualMachine = new VirtualMachine(
+  //create vm
+  virtualMachine = new VirtualMachine(
     'cloudflare-connector-vm',
     {
       vmName: 'cloudflare-connector',
@@ -75,8 +71,8 @@ export async function createCloudflareConnector(
           enabled: true,
         },
       },
-      resourceGroupName: resourceGroup.name,
-      location: resourceGroup.location,
+      resourceGroupName: input.resourceGroup.name,
+      location: input.resourceGroup.location,
       networkProfile: {
         networkInterfaces: [
           {
@@ -85,24 +81,10 @@ export async function createCloudflareConnector(
         ],
       },
       osProfile: {
-        adminUsername: user ? user.username : 'cloudflared',
-        adminPassword: user ? user.password : password.result,
+        adminUsername: input.user.username,
+        adminPassword: input.user.password,
         computerName: 'cloudflare-connector',
-        customData: b64Encode(`#cloud-config
-apt:
-  sources:
-    cloudflare:
-      source: deb [arch="amd64"] https://pkg.cloudflareclient.com/ $RELEASE main
-      keyid: 6E2DD2174FA1C3BA
-      keyserver: 'https://pkg.cloudflareclient.com/pubkey.gpg'
-package_update: true
-packages:
-  - cloudflare-warp
-runcmd:
-  - sudo sysctl -w net.ipv4.ip_forward=1
-  - warp-cli --accept-tos connector new ${token}
-  - warp-cli --accept-tos connect
-          `),
+        customData: GetCloudInitCustomData(input.tunnelToken),
         linuxConfiguration: {
           patchSettings: {
             patchMode: LinuxVMGuestPatchMode.ImageDefault,
@@ -135,12 +117,37 @@ runcmd:
       },
     },
     {
-      dependsOn: [networkInterface, subnet],
+      dependsOn: [networkInterface, input.subnet],
     },
   );
-  return [virtualMachine, networkInterface];
+  return true;
 }
 
-function b64Encode(str: string): string {
-  return Buffer.from(str).toString('base64');
+// private functions
+function GetCloudInitCustomData(tunnelToken: string): string {
+  const cloudInitConfig = `
+#cloud-config
+apt:
+  sources:
+    cloudflare:
+      source: deb [arch="amd64"] https://pkg.cloudflareclient.com/ $RELEASE main
+      keyid: 6E2DD2174FA1C3BA
+      keyserver: 'https://pkg.cloudflareclient.com/pubkey.gpg'
+package_update: true
+packages:
+  - cloudflare-warp
+runcmd:
+  - sudo sysctl -w net.ipv4.ip_forward=1
+  - warp-cli --accept-tos connector new ${tunnelToken}
+  - warp-cli --accept-tos connect
+`;
+  return Buffer.from(cloudInitConfig).toString('base64');
+}
+
+function GetValue<T>(output: Output<T>) {
+  return new Promise<T>((resolve, reject) => {
+    output.apply((value) => {
+      resolve(value);
+    });
+  });
 }

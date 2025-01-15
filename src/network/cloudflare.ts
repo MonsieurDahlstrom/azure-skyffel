@@ -4,26 +4,11 @@ import { NetworkSecurityGroup } from '@pulumi/azure-native/network';
 import { RouteTable } from '@pulumi/azure-native/network';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 
-export function createCloudflareZTNASubnet(
-  virtualNetwork: VirtualNetwork,
-  resourceGroup: ResourceGroup,
-  cidr: string,
-): [subnet: Subnet, nsg: NetworkSecurityGroup, routeTable: RouteTable] {
-  // Create a new Cloudflare Zero Trust Network subnet
-  const subnet = new Subnet('cloudflare-ztna-gateway', {
-    resourceGroupName: resourceGroup.name,
-    virtualNetworkName: virtualNetwork.name,
-    addressPrefix: cidr,
-  });
-  const routeTable = new RouteTable('cloudflare-ztna-route-table', {
-    resourceGroupName: resourceGroup.name,
-    routes: [],
-  });
-  const nsg = new NetworkSecurityGroup('cloudflare-ztna-nsg', {
-    resourceGroupName: resourceGroup.name,
-    location: resourceGroup.location,
-    securityRules: [
-      /*
+export let subnet: Subnet | undefined;
+export let networkSecurityGroup: NetworkSecurityGroup | undefined;
+export let routeTable: RouteTable | undefined;
+
+/*
       {
         name: 'allow-ztna-ssh',
         access: 'Allow',
@@ -61,7 +46,27 @@ export function createCloudflareZTNASubnet(
         priority: 120,
       },
       */
-    ],
+
+export type CloudflareNetworkInput = {
+  resourceGroup: ResourceGroup;
+  virtualNetwork: VirtualNetwork;
+  subnetCidr: string;
+};
+
+export async function setup(input: CloudflareNetworkInput): Promise<boolean> {
+  subnet = new Subnet('cloudflare-ztna-gateway', {
+    resourceGroupName: input.resourceGroup.name,
+    virtualNetworkName: input.virtualNetwork.name,
+    addressPrefix: input.subnetCidr,
   });
-  return [subnet, nsg, routeTable];
+  routeTable = new RouteTable('cloudflare-ztna-route-table', {
+    resourceGroupName: input.resourceGroup.name,
+    routes: [],
+  });
+  networkSecurityGroup = new NetworkSecurityGroup('cloudflare-ztna-nsg', {
+    resourceGroupName: input.resourceGroup.name,
+    location: input.resourceGroup.location,
+    securityRules: [],
+  });
+  return true;
 }
