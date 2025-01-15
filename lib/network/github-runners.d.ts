@@ -1,8 +1,9 @@
-import * as azure from '@pulumi/azure-native';
+import { VirtualNetwork, Subnet } from '@pulumi/azure-native/network';
+import { ResourceGroup } from '@pulumi/azure-native/resources';
 export declare function createGithubRunnerSubnet(
-  virtualNetwork: azure.network.VirtualNetwork,
-  resourceGroup: azure.resources.ResourceGroup,
+  virtualNetwork: VirtualNetwork,
+  resourceGroup: ResourceGroup,
   cidr: string,
   github_business_id: string,
-): azure.network.Subnet;
+): Subnet;
 //# sourceMappingURL=github-runners.d.ts.map

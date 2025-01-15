@@ -1,5 +1,11 @@
 import * as pulumi from '@pulumi/pulumi';
-import * as azure from '@pulumi/azure-native';
+import {
+  VirtualNetwork,
+  Subnet,
+  RouteTable,
+  NetworkSecurityGroup,
+} from '@pulumi/azure-native/network';
+import { ResourceGroup } from '@pulumi/azure-native/resources';
 import * as azapi from '@ediri/azapi';
 
 const githubNetworkDelegations = [
@@ -11,12 +17,12 @@ const githubNetworkDelegations = [
 ];
 
 export function createGithubRunnerSubnet(
-  virtualNetwork: azure.network.VirtualNetwork,
-  resourceGroup: azure.resources.ResourceGroup,
+  virtualNetwork: VirtualNetwork,
+  resourceGroup: ResourceGroup,
   cidr: string,
   github_business_id: string,
-): azure.network.Subnet {
-  const subnet = new azure.network.Subnet('github-runners', {
+): Subnet {
+  const subnet = new Subnet('github-runners', {
     resourceGroupName: resourceGroup.name,
     virtualNetworkName: virtualNetwork.name,
     addressPrefix: cidr,
@@ -38,24 +44,3 @@ export function createGithubRunnerSubnet(
   });
   return subnet;
 }
-
-/*
-resource "azapi_resource" "github_network_settings" {
-  type                      = "GitHub.Network/networkSettings@2024-04-02"
-  name                      = "github-network-settings"	
-  location                  = var.location
-  parent_id                 = var.resource_group_id
-  schema_validation_enabled = false
-  body = {
-    properties = {
-      businessId = var.github_business_id
-      subnetId   = var.snet_id
-    }
-  }
-  response_export_values = ["tags.GitHubId"]
-
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-*/

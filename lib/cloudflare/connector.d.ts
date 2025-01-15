@@ -1,10 +1,9 @@
-import * as azure from '@pulumi/azure-native';
+import { Subnet, NetworkInterface } from '@pulumi/azure-native/network';
+import { VirtualMachine } from '@pulumi/azure-native/compute';
+import { ResourceGroup } from '@pulumi/azure-native/resources';
 export declare function createCloudflareConnector(
-  resourceGroup: azure.resources.ResourceGroup,
-  subnet: {
-    id: string;
-    addressPrefix: string;
-  },
+  resourceGroup: ResourceGroup,
+  subnet: Subnet,
   token: string,
   user:
     | {
@@ -12,5 +11,5 @@ export declare function createCloudflareConnector(
         password: string;
       }
     | undefined,
-): [azure.compute.VirtualMachine, azure.network.NetworkInterface];
+): Promise<[VirtualMachine, NetworkInterface]>;
 //# sourceMappingURL=connector.d.ts.map

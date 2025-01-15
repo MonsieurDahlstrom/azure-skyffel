@@ -1,16 +1,43 @@
 import * as pulumi from '@pulumi/pulumi';
+import { Output } from '@pulumi/pulumi';
+
 import * as cloudflare from '@pulumi/cloudflare';
-import * as azure from '@pulumi/azure-native';
+import {
+  VirtualNetwork,
+  Subnet,
+  NetworkInterface,
+} from '@pulumi/azure-native/network';
+import {
+  VirtualMachine,
+  LinuxVMGuestPatchMode,
+  SecurityTypes,
+  CachingTypes,
+  DiskCreateOptionTypes,
+  StorageAccountTypes,
+} from '@pulumi/azure-native/compute';
+import { ResourceGroup } from '@pulumi/azure-native/resources';
 import * as random from '@pulumi/random';
 import { cidrHost } from '../network/core.js';
 
-export function createCloudflareConnector(
-  resourceGroup: azure.resources.ResourceGroup,
-  subnet: { id: string; addressPrefix: string },
+function GetValue<T>(output: Output<T>) {
+  return new Promise<T>((resolve, reject) => {
+    output.apply((value) => {
+      resolve(value);
+    });
+  });
+}
+
+export async function createCloudflareConnector(
+  resourceGroup: ResourceGroup,
+  subnet: Subnet,
   token: string,
   user: { username: string; password: string } | undefined,
-): [azure.compute.VirtualMachine, azure.network.NetworkInterface] {
-  const networkInterface = new azure.network.NetworkInterface(
+): Promise<[VirtualMachine, NetworkInterface]> {
+  const addressPrefix = await GetValue(
+    subnet.addressPrefix.apply((prefix) => prefix),
+  );
+  if (!addressPrefix) throw new Error('Subnet address prefix not found');
+  const networkInterface = new NetworkInterface(
     'cloudflare-connector-nic',
     {
       resourceGroupName: resourceGroup.name,
@@ -23,9 +50,12 @@ export function createCloudflareConnector(
             id: subnet.id,
           },
           privateIPAllocationMethod: 'Static',
-          privateIPAddress: cidrHost(subnet.addressPrefix, 4),
+          privateIPAddress: cidrHost(addressPrefix, 4),
         },
       ],
+    },
+    {
+      dependsOn: [subnet],
     },
   );
   const password = new random.RandomPassword('password', {
@@ -33,12 +63,12 @@ export function createCloudflareConnector(
     special: true,
     overrideSpecial: '!#$%&*()-_=+[]{}<>:?',
   });
-  const virtualMachine = new azure.compute.VirtualMachine(
+  const virtualMachine = new VirtualMachine(
     'cloudflare-connector-vm',
     {
       vmName: 'cloudflare-connector',
       hardwareProfile: {
-        vmSize: azure.compute.VirtualMachineSizeTypes.Standard_B2ms,
+        vmSize: 'Standard_D2_v5',
       },
       diagnosticsProfile: {
         bootDiagnostics: {
@@ -75,13 +105,13 @@ runcmd:
           `),
         linuxConfiguration: {
           patchSettings: {
-            patchMode: azure.compute.LinuxVMGuestPatchMode.ImageDefault,
+            patchMode: LinuxVMGuestPatchMode.ImageDefault,
           },
           provisionVMAgent: true,
         },
       },
       securityProfile: {
-        securityType: azure.compute.SecurityTypes.TrustedLaunch,
+        securityType: SecurityTypes.TrustedLaunch,
         uefiSettings: {
           secureBootEnabled: true,
           vTpmEnabled: true,
@@ -89,10 +119,10 @@ runcmd:
       },
       storageProfile: {
         osDisk: {
-          caching: azure.compute.CachingTypes.ReadWrite,
-          createOption: azure.compute.DiskCreateOptionTypes.FromImage,
+          caching: CachingTypes.ReadWrite,
+          createOption: DiskCreateOptionTypes.FromImage,
           managedDisk: {
-            storageAccountType: azure.compute.StorageAccountTypes.Standard_LRS,
+            storageAccountType: StorageAccountTypes.Standard_LRS,
           },
           name: 'cloudflare-connector-osdisk',
         },
@@ -104,28 +134,10 @@ runcmd:
         },
       },
     },
+    {
+      dependsOn: [networkInterface, subnet],
+    },
   );
-  /*
-  const virtualMachineEntraExtension = new azure.compute.VirtualMachineExtension('virtualMachineExtension', {});
-  const virtualMachineCloudflareExtension =
-    new azure.compute.VirtualMachineExtension('cloudflared', {
-      vmName: virtualMachine.name,
-      resourceGroupName: resourceGroup.name,
-      publisher: 'Microsoft.Azure.Extensions',
-      type: 'CustomScript',
-      typeHandlerVersion: '2.1',
-      settings: {
-        script: b64Encode(`
-        curl https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
-        sudo apt-get update && sudo apt-get install cloudflare-warp -y
-        sudo sysctl -w net.ipv4.ip_forward=1
-
-        warp-cli --accept-tos connector new ${token}
-        warp-cli --accept-tos connect`),
-      },
-    });
-  */
   return [virtualMachine, networkInterface];
 }
 

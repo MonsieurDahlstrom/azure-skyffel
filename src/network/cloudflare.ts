@@ -1,29 +1,25 @@
-import * as azure from '@pulumi/azure-native';
 import * as pulumi from '@pulumi/pulumi';
+import { VirtualNetwork, Subnet } from '@pulumi/azure-native/network';
+import { NetworkSecurityGroup } from '@pulumi/azure-native/network';
+import { RouteTable } from '@pulumi/azure-native/network';
+import { ResourceGroup } from '@pulumi/azure-native/resources';
 
 export function createCloudflareZTNASubnet(
-  virtualNetwork: azure.network.VirtualNetwork,
-  resourceGroup: azure.resources.ResourceGroup,
+  virtualNetwork: VirtualNetwork,
+  resourceGroup: ResourceGroup,
   cidr: string,
-): [
-  subnet: azure.network.Subnet,
-  nsg: azure.network.NetworkSecurityGroup,
-  routeTable: azure.network.RouteTable,
-] {
+): [subnet: Subnet, nsg: NetworkSecurityGroup, routeTable: RouteTable] {
   // Create a new Cloudflare Zero Trust Network subnet
-  const subnet = new azure.network.Subnet('cloudflare-ztna-gateway', {
+  const subnet = new Subnet('cloudflare-ztna-gateway', {
     resourceGroupName: resourceGroup.name,
     virtualNetworkName: virtualNetwork.name,
     addressPrefix: cidr,
   });
-  const routeTable = new azure.network.RouteTable(
-    'cloudflare-ztna-route-table',
-    {
-      resourceGroupName: resourceGroup.name,
-      routes: [],
-    },
-  );
-  const nsg = new azure.network.NetworkSecurityGroup('cloudflare-ztna-nsg', {
+  const routeTable = new RouteTable('cloudflare-ztna-route-table', {
+    resourceGroupName: resourceGroup.name,
+    routes: [],
+  });
+  const nsg = new NetworkSecurityGroup('cloudflare-ztna-nsg', {
     resourceGroupName: resourceGroup.name,
     location: resourceGroup.location,
     securityRules: [
