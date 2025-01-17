@@ -29,13 +29,13 @@
   },
   "homepage": "https://github.com/MonsieurDahlstrom/pulumi-azure#readme",
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.2",
+    "@arethetypeswrong/cli": "^0.17.3",
     "@types/jsbn": "^1.2.33",
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.10.7",
     "prettier": "^3.4.2",
-    "semantic-release": "^24.2.0",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "semantic-release": "^24.2.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.1"
   },
   "release": {
     "branches": [
@@ -58,8 +58,8 @@
   ],
   "dependencies": {
     "@ediri/azapi": "^1.12.2",
-    "@pulumi/azure-native": "^2.79.0",
-    "@pulumi/cloudflare": "^5.46.0",
+    "@pulumi/azure-native": "^2.82.0",
+    "@pulumi/cloudflare": "^5.47.0",
     "@pulumi/random": "^4.16.8",
     "jsbn": "^1.1.0"
   }
