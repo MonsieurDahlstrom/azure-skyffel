@@ -29,6 +29,7 @@ export type CloudflareConnectorInput = {
   subnet: Subnet;
   resourceGroup: ResourceGroup;
   tunnelToken: string;
+  vmSize: string;
 };
 export async function setup(input: CloudflareConnectorInput): Promise<boolean> {
   const addressPrefix = await GetValue(
@@ -63,7 +64,7 @@ export async function setup(input: CloudflareConnectorInput): Promise<boolean> {
     {
       vmName: 'cloudflare-connector',
       hardwareProfile: {
-        vmSize: 'Standard_D2_v5',
+        vmSize: input.vmSize,
       },
       diagnosticsProfile: {
         bootDiagnostics: {

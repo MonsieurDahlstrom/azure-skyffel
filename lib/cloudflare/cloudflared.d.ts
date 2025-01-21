@@ -16,6 +16,7 @@ export type CloudflaredInput = {
   };
   subnet: Subnet;
   resourceGroup: ResourceGroup;
+  vmSize: string;
 };
 export declare function setup(input: CloudflaredInput): Promise<boolean>;
 //# sourceMappingURL=cloudflared.d.ts.map

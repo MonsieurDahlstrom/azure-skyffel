@@ -12,6 +12,7 @@ export type CloudflareConnectorInput = {
   subnet: Subnet;
   resourceGroup: ResourceGroup;
   tunnelToken: string;
+  vmSize: string;
 };
 export declare function setup(
   input: CloudflareConnectorInput,

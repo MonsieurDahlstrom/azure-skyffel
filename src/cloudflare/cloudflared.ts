@@ -36,6 +36,7 @@ export type CloudflaredInput = {
   };
   subnet: Subnet;
   resourceGroup: ResourceGroup;
+  vmSize: string;
 };
 
 export async function setup(input: CloudflaredInput): Promise<boolean> {
@@ -88,7 +89,7 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
     {
       vmName: 'cloudflare-connector',
       hardwareProfile: {
-        vmSize: 'Standard_D2_v5',
+        vmSize: input.vmSize,
       },
       diagnosticsProfile: {
         bootDiagnostics: {
