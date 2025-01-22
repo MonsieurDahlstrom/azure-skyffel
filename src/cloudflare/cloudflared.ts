@@ -74,8 +74,7 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
           subnet: {
             id: input.subnet.id,
           },
-          privateIPAllocationMethod: 'Static',
-          privateIPAddress: cidrHost(addressPrefix, 4),
+          privateIPAllocationMethod: 'Dynamic',
         },
       ],
     },
