@@ -134,7 +134,6 @@ describe('SplitHorizonPrivateDNS', function () {
       expect(roleAssignments).toHaveLength(3);
 
       roleAssignments.forEach((roleAssignment) => {
-        console.log(roleAssignment);
         const expectedRoleDefinitionId = [
           `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${AzureRoles.RoleUUID.KeyVaultSecretOfficer}`,
           `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${AzureRoles.RoleUUID.KeyVaultCertificateOfficer}`,
