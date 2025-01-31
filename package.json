@@ -7,10 +7,10 @@
   "type": "commonjs",
   "scripts": {
     "build": "rm -rf lib && tsc",
-    "ci": "npm run build && npm run format",
+    "ci": "npm run build && npm run format && npm run check-exports && npm run test",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
-    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
+    "check-exports": "attw --pack . ",
     "test": "vitest run"
   },
   "repository": "https://github.com/monsieurdahlstrom/pulumi-azure.git",
@@ -31,11 +31,11 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.3",
     "@types/jsbn": "^1.2.33",
-    "@types/node": "^22.10.7",
+    "@types/node": "^22.12.0",
     "prettier": "^3.4.2",
     "semantic-release": "^24.2.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.3"
+    "vitest": "^3.0.4"
   },
   "release": {
     "branches": [
@@ -58,9 +58,10 @@
   ],
   "dependencies": {
     "@ediri/azapi": "^1.12.2",
-    "@pulumi/azure-native": "^2.83.0",
-    "@pulumi/cloudflare": "^5.48.0",
+    "@pulumi/azure-native": "^2.85.0",
+    "@pulumi/cloudflare": "^5.49.0",
     "@pulumi/random": "^4.17.0",
-    "jsbn": "^1.1.0"
+    "jsbn": "^1.1.0",
+    "uuid": "^11.0.5"
   }
 }
