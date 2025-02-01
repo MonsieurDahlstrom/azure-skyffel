@@ -112,7 +112,7 @@ describe('SplitHorizonPrivateDNS', function () {
     test('is defined', function () {
       expect(AzureRoles.assignKeyVaultOfficers).toBeDefined();
     });
-    test('assigns keyvault officers', function () {
+    test('assigns keyvault officers', async function () {
       const keyVault = new azure_native.keyvault.Vault('keyVault', {
         location: 'East US',
         resourceGroupName: 'resourceGroupName',
@@ -126,9 +126,9 @@ describe('SplitHorizonPrivateDNS', function () {
         },
       });
       const subscriptionId = uuidv4();
-      const roleAssignments = AzureRoles.assignKeyVaultOfficers({
+      const roleAssignments = await AzureRoles.assignKeyVaultOfficers({
         principal: { id: 'principal-id', type: 'principal-type' },
-        keyVault: keyVault,
+        keyVault,
         subscriptionId,
       });
       expect(roleAssignments).toHaveLength(3);

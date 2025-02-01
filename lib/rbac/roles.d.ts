@@ -1,4 +1,3 @@
-import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
 export declare const RoleUUID: {
   PrivateDNSZoneContributor: string;
@@ -16,9 +15,9 @@ type RoleAssignment = {
     type: string;
   };
   rbacRole: string;
-  scope: pulumi.Input<string>;
-  key: pulumi.Input<string>;
-  subscriptionId: pulumi.Input<string>;
+  scope: string;
+  key: string;
+  subscriptionId: string;
 };
 export declare function assignRole(
   input: RoleAssignment,
@@ -30,6 +29,6 @@ export declare function assignKeyVaultOfficers(input: {
   };
   keyVault: azure_native.keyvault.Vault;
   subscriptionId: string;
-}): azure_native.authorization.RoleAssignment[];
+}): Promise<azure_native.authorization.RoleAssignment[]>;
 export {};
 //# sourceMappingURL=roles.d.ts.map

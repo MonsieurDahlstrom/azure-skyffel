@@ -65,15 +65,19 @@ async function createPrivateDnsZone(
     { dependsOn: [privateDnsZone, input.network, input.resourceGroup] },
   );
   zones.set(input.key, privateDnsZone);
-  input.dnsZoneContributors.forEach(async (contributor) => {
-    AzureRoles.assignRole({
-      principal: contributor,
-      rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-      scope: privateDnsZone.id,
-      key: input.key,
-      subscriptionId: input.subscriptionId,
+  if (input.dnsZoneContributors.length > 0) {
+    privateDnsZone.id.apply((privateDnsZoneId) => {
+      input.dnsZoneContributors.forEach(async (contributor) => {
+        AzureRoles.assignRole({
+          principal: contributor,
+          rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
+          scope: privateDnsZoneId,
+          key: input.key,
+          subscriptionId: input.subscriptionId,
+        });
+      });
     });
-  });
+  }
   return true;
 }
 

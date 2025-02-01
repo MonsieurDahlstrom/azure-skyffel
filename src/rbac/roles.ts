@@ -19,9 +19,9 @@ type RoleAssignment = {
     type: string;
   };
   rbacRole: string;
-  scope: pulumi.Input<string>;
-  key: pulumi.Input<string>;
-  subscriptionId: pulumi.Input<string>;
+  scope: string;
+  key: string;
+  subscriptionId: string;
 };
 
 export function assignRole(
@@ -44,35 +44,40 @@ export function assignRole(
   return role;
 }
 
-export function assignKeyVaultOfficers(input: {
+export async function assignKeyVaultOfficers(input: {
   principal: { id: string; type: string };
   keyVault: azure_native.keyvault.Vault;
   subscriptionId: string;
-}): azure_native.authorization.RoleAssignment[] {
-  const contributeSecretsRole = assignRole({
-    principal: input.principal,
-    rbacRole: RoleUUID.KeyVaultSecretOfficer,
-    scope: input.keyVault.id,
-    key: input.keyVault.name,
-    subscriptionId: input.subscriptionId,
+}): Promise<azure_native.authorization.RoleAssignment[]> {
+  return new Promise((resolve, reject) => {
+    let assignments = new Array<azure_native.authorization.RoleAssignment>();
+    pulumi.all([input.keyVault.name, input.keyVault.id]).apply(([name, id]) => {
+      let contributeSecretsRole = assignRole({
+        principal: input.principal,
+        rbacRole: RoleUUID.KeyVaultSecretOfficer,
+        scope: id,
+        key: name,
+        subscriptionId: input.subscriptionId,
+      });
+      assignments.push(contributeSecretsRole);
+      let contributeCertificatesRole = assignRole({
+        principal: input.principal,
+        rbacRole: RoleUUID.KeyVaultCertificateOfficer,
+        scope: id,
+        key: name,
+        subscriptionId: input.subscriptionId,
+      });
+      assignments.push(contributeCertificatesRole);
+      let contributeCryptoRole = assignRole({
+        principal: input.principal,
+        rbacRole: RoleUUID.KeyVaultCryptoOfficer,
+        scope: id,
+        key: name,
+        subscriptionId: input.subscriptionId,
+      });
+      assignments.push(contributeCryptoRole);
+      console.log(assignments.length);
+      resolve(assignments);
+    });
   });
-  const contributeCertificatesRole = assignRole({
-    principal: input.principal,
-    rbacRole: RoleUUID.KeyVaultCertificateOfficer,
-    scope: input.keyVault.id,
-    key: input.keyVault.name,
-    subscriptionId: input.subscriptionId,
-  });
-  const contributeCryptoRole = assignRole({
-    principal: input.principal,
-    rbacRole: RoleUUID.KeyVaultCryptoOfficer,
-    scope: input.keyVault.id,
-    key: input.keyVault.name,
-    subscriptionId: input.subscriptionId,
-  });
-  return [
-    contributeSecretsRole,
-    contributeCertificatesRole,
-    contributeCryptoRole,
-  ];
 }
