@@ -76,7 +76,6 @@ export async function assignKeyVaultOfficers(input: {
         subscriptionId: input.subscriptionId,
       });
       assignments.push(contributeCryptoRole);
-      console.log(assignments.length);
       resolve(assignments);
     });
   });

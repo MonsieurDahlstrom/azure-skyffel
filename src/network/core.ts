@@ -20,11 +20,40 @@ export function createNetwork(
   return vnet;
 }
 
+export enum MDSubbnetDelegation {
+  GithubRunner = 1,
+  PrivateDNSResovler,
+}
+export interface MDSubnetArgs extends azure.network.SubnetArgs {
+  delegationType?: MDSubbnetDelegation;
+}
 export function createSubnets(
-  snets: Map<string, azure.network.SubnetArgs>,
+  snets: Map<string, MDSubnetArgs>,
 ): Map<string, azure.network.Subnet> {
   const subnets = new Map<string, azure.network.Subnet>();
   for (const [key, value] of snets) {
+    switch (value.delegationType) {
+      case MDSubbnetDelegation.GithubRunner:
+        value.delegations = [
+          {
+            name: 'github-network-settings',
+            actions: ['Microsoft.Network/virtualNetwork/join/action'],
+            serviceName: 'Github.Network/networkSettings',
+          },
+        ];
+        break;
+      case MDSubbnetDelegation.PrivateDNSResovler:
+        value.delegations = [
+          {
+            name: 'Microsoft.Network.dnsResolvers',
+            actions: ['Microsoft.Network/virtualNetwork/join/action'],
+            serviceName: 'Microsoft.Network/dnsResolvers',
+          },
+        ];
+        break;
+      default:
+        break;
+    }
     const subnet = new azure.network.Subnet(key, value);
     subnets.set(key, subnet);
   }

@@ -1,5 +1,27 @@
-import { expect, test, describe } from 'vitest';
+import { expect, test, describe, beforeEach } from 'vitest';
 import { cidrHost, cidrSubnet } from './core';
+import * as pulumi from '@pulumi/pulumi';
+import * as azure_native from '@pulumi/azure-native';
+
+pulumi.runtime.setMocks(
+  {
+    newResource: function (args: pulumi.runtime.MockResourceArgs): {
+      id: string;
+      state: any;
+    } {
+      return {
+        id: args.inputs.name + '_id',
+        state: args.inputs,
+      };
+    },
+    call: function (args: pulumi.runtime.MockCallArgs) {
+      return args.inputs;
+    },
+  },
+  'project',
+  'stack',
+  false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
+);
 
 describe('cidrHost', () => {
   test('cidrHost expected host with number', () => {
@@ -24,5 +46,50 @@ describe('cidrSubnet', () => {
   });
   test('cidrSubnet expected host with string', () => {
     expect(cidrSubnet('10.0.0.0/16', 1, 1)).toBe('10.0.128.0/17');
+  });
+});
+
+describe('createSubnets', () => {
+  let NetworkCore: typeof import('./core');
+  let vnet: azure_native.network.VirtualNetwork;
+  let resourceGroup: azure_native.resources.ResourceGroup;
+  beforeEach(async function () {
+    // It's important to import the program _after_ the mocks are defined.
+    NetworkCore = await import('./core');
+    resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
+      resourceGroupName: 'rg-test',
+    });
+    vnet = NetworkCore.createNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
+  });
+  test('createSubnets expected to be defined', () => {
+    expect(NetworkCore.createSubnets).toBeTypeOf('function');
+  });
+  test('createSubnets creates snet without delegations', () => {
+    const snets = new Map<string, NetworkCore.MDSubnetArgs>();
+    snets.set('subnet1', {
+      addressPrefix: '10.0.0.0/25',
+      virtualNetworkName: vnet.name,
+      resourceGroupName: resourceGroup.name,
+    });
+    const subnets = NetworkCore.createSubnets(snets);
+    expect(subnets.size).toBe(1);
+    subnets.get('subnet1').delegations.apply((delegations) => {
+      console.log(delegations);
+      expect(delegations).toBeUndefined();
+    });
+  });
+  test('createSubnets creates snet with delegations', () => {
+    const snets = new Map<string, NetworkCore.MDSubnetArgs>();
+    snets.set('subnet1', {
+      addressPrefix: '10.0.0.0/25',
+      virtualNetworkName: vnet.name,
+      resourceGroupName: resourceGroup.name,
+      delegationType: NetworkCore.MDSubbnetDelegation.GithubRunner,
+    });
+    const subnets = NetworkCore.createSubnets(snets);
+    expect(subnets.size).toBe(1);
+    subnets.get('subnet1').delegations.apply((delegations) => {
+      expect(delegations.length).toBe(1);
+    });
   });
 });

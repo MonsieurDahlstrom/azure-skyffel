@@ -5,8 +5,15 @@ export declare function createNetwork(
   cidr: string,
   dnsServers?: string[],
 ): azure.network.VirtualNetwork;
+export declare enum MDSubbnetDelegation {
+  GithubRunner = 1,
+  PrivateDNSResovler = 2,
+}
+export interface MDSubnetArgs extends azure.network.SubnetArgs {
+  delegationType?: MDSubbnetDelegation;
+}
 export declare function createSubnets(
-  snets: Map<string, azure.network.SubnetArgs>,
+  snets: Map<string, MDSubnetArgs>,
 ): Map<string, azure.network.Subnet>;
 export declare function cidrSubnet(
   iprange: string,
