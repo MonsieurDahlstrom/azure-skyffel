@@ -21,7 +21,8 @@ export function createNetwork(
 }
 
 export enum MDSubbnetDelegation {
-  GithubRunner = 1,
+  None = 0,
+  GithubRunner,
   PrivateDNSResovler,
 }
 export interface MDSubnetArgs extends azure.network.SubnetArgs {

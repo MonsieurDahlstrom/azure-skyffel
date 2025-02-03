@@ -6,6 +6,7 @@ export declare function createNetwork(
   dnsServers?: string[],
 ): azure.network.VirtualNetwork;
 export declare enum MDSubbnetDelegation {
+  None = 0,
   GithubRunner = 1,
   PrivateDNSResovler = 2,
 }

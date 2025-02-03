@@ -74,7 +74,6 @@ describe('createSubnets', () => {
     const subnets = NetworkCore.createSubnets(snets);
     expect(subnets.size).toBe(1);
     subnets.get('subnet1').delegations.apply((delegations) => {
-      console.log(delegations);
       expect(delegations).toBeUndefined();
     });
   });

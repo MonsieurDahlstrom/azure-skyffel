@@ -9,7 +9,7 @@ export declare const RoleUUID: {
   KeyVaultCertificateOfficer: string;
   KeyVaultCertificateUser: string;
 };
-type RoleAssignment = {
+type MDRoleAssignment = {
   principal: {
     id: string;
     type: string;
@@ -20,7 +20,7 @@ type RoleAssignment = {
   subscriptionId: string;
 };
 export declare function assignRole(
-  input: RoleAssignment,
+  input: MDRoleAssignment,
 ): azure_native.authorization.RoleAssignment;
 export declare function assignKeyVaultOfficers(input: {
   principal: {

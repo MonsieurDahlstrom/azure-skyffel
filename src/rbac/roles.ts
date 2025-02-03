@@ -13,7 +13,7 @@ export const RoleUUID = {
   KeyVaultCertificateUser: 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba',
 };
 
-type RoleAssignment = {
+type MDRoleAssignment = {
   principal: {
     id: string;
     type: string;
@@ -25,7 +25,7 @@ type RoleAssignment = {
 };
 
 export function assignRole(
-  input: RoleAssignment,
+  input: MDRoleAssignment,
 ): azure_native.authorization.RoleAssignment {
   const roleGUID = new random.RandomUuid(
     `${input.principal.type}-${input.principal.id}-assigned-role-${input.rbacRole}-for-${input.key}`,
