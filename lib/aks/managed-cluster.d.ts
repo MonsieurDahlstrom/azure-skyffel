@@ -1,6 +1,7 @@
 import {
   ManagedCluster,
   OSDiskType,
+  ListManagedClusterAdminCredentialsResult,
 } from '@pulumi/azure-native/containerservice';
 import { UserAssignedIdentity } from '@pulumi/azure-native/managedidentity';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
@@ -9,6 +10,7 @@ import {
   VirtualNetwork,
   PrivateZone,
 } from '@pulumi/azure-native/network';
+import * as pulumi from '@pulumi/pulumi';
 export type AksInput = {
   name: string;
   resourceGroup: ResourceGroup;
@@ -27,6 +29,6 @@ export type AksInput = {
 };
 export declare let cluster: ManagedCluster;
 export declare let clusterIdentity: UserAssignedIdentity;
-export declare let clusterKubeconfig: any;
-export declare function setupAKS(input: AksInput): Promise<boolean>;
+export declare let adminCredentials: pulumi.Output<ListManagedClusterAdminCredentialsResult>;
+export declare function setup(input: AksInput): Promise<boolean>;
 //# sourceMappingURL=managed-cluster.d.ts.map

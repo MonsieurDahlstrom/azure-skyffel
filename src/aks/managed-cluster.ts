@@ -6,7 +6,8 @@ import {
   NetworkPlugin,
   NetworkPluginMode,
   OSDiskType,
-  listManagedClusterAdminCredentials,
+  listManagedClusterAdminCredentialsOutput,
+  ListManagedClusterAdminCredentialsResult,
 } from '@pulumi/azure-native/containerservice';
 import { UserAssignedIdentity } from '@pulumi/azure-native/managedidentity';
 import { RoleAssignment } from '@pulumi/azure-native/authorization';
@@ -40,8 +41,9 @@ export type AksInput = {
 
 export let cluster: ManagedCluster;
 export let clusterIdentity: UserAssignedIdentity;
-export let clusterKubeconfig: any;
-export async function setupAKS(input: AksInput): Promise<boolean> {
+export let adminCredentials: pulumi.Output<ListManagedClusterAdminCredentialsResult>;
+
+export async function setup(input: AksInput): Promise<boolean> {
   //create an entra identity for the cluster
   clusterIdentity = new UserAssignedIdentity(`identity-${input.name}`, {
     resourceGroupName: input.resourceGroup.name,
@@ -133,16 +135,9 @@ export async function setupAKS(input: AksInput): Promise<boolean> {
     },
     { dependsOn: neededRoles },
   );
-  clusterKubeconfig = pulumi
-    .all([input.resourceGroup.name, cluster.name])
-    .apply(async ([resourceGroupName, resourceName]) => {
-      const creds = await listManagedClusterAdminCredentials({
-        resourceGroupName,
-        resourceName,
-      });
-      return parse(
-        Buffer.from(creds.kubeconfigs[0]!.value, 'base64').toString('binary'),
-      );
-    });
+  adminCredentials = listManagedClusterAdminCredentialsOutput({
+    resourceGroupName: input.resourceGroup.name,
+    resourceName: cluster.name,
+  });
   return true;
 }
