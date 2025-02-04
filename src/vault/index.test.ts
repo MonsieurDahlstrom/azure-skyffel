@@ -112,7 +112,11 @@ describe('Vault', function () {
         tenantId = uuidv4();
         input = {
           admins: [admin],
-          cloudflare_api_token: 'test_token',
+          tls: {
+            cloudflareApiToken: 'test_token',
+            contactEmail: 'mathias@monsieurdahlstrom.com',
+            fqdn: 'vault.monsieurdahlstrom.dev',
+          },
           resourceGroup,
           subnet,
           subscriptionId,
@@ -136,6 +140,16 @@ describe('Vault', function () {
       });
       test('#vaultIdentity is defined', function () {
         expect(Vault.vaultIdentity).toBeDefined();
+      });
+      test('cloud-init', function () {
+        Vault.virtualMachine.osProfile.customData.apply((customData) => {
+          let cloudInitConfig = Buffer.from(customData, 'base64').toString();
+          expect(cloudInitConfig).toContain(
+            `cloudflare_api_token = "${input.tls.cloudflareApiToken}"`,
+          );
+          expect(cloudInitConfig).toContain(`-d "${input.tls.fqdn}"`);
+          expect(cloudInitConfig).toContain(`-m ${input.tls.contactEmail}`);
+        });
       });
     });
   });

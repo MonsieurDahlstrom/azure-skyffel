@@ -34,8 +34,11 @@ export type VaultInput = {
   tenantId: string;
   admins: { principalId: string; type: string }[];
   subscriptionId: string;
-  cloudflareApiToken: string;
-  fqdn: string;
+  tls: {
+    contactEmail: string;
+    cloudflareApiToken: string;
+    fqdn: string;
+  };
 };
 export let networkInterface: NetworkInterface;
 export let virtualMachine: VirtualMachine;
@@ -157,9 +160,9 @@ export async function setup(input: VaultInput): Promise<boolean> {
           client_id: vaultIdentityClientId,
         },
         tls: {
-          contactEmail: 'mathias@monsieurdahlstrom.dev',
-          cloudflareApiToken: input.cloudflareApiToken,
-          hostname: input.fqdn,
+          contactEmail: input.tls.contactEmail,
+          cloudflareApiToken: input.tls.cloudflareApiToken,
+          hostname: input.tls.fqdn,
         },
       });
     });
@@ -227,6 +230,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
     },
     {
       dependsOn: [networkInterface, input.subnet, keyVault, autoUnsealSecret],
+      replaceOnChanges: ['osProfile.customData'],
     },
   );
   return true;
@@ -274,7 +278,7 @@ write_files:
   - owner: 'root:root'
     path: /opt/vault/certbot/cloudflare.ini
     content: |
-      dns_cloudflareApiToken = "${input.tls.cloudflareApiToken}"
+      dns_cloudflare_api_token = "${input.tls.cloudflareApiToken}"
     permissions: '600'
     defer: true
   - owner: "root:root"

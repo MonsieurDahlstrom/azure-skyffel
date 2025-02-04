@@ -18,8 +18,11 @@ export type VaultInput = {
     type: string;
   }[];
   subscriptionId: string;
-  cloudflareApiToken: string;
-  fqdn: string;
+  tls: {
+    contactEmail: string;
+    cloudflareApiToken: string;
+    fqdn: string;
+  };
 };
 export declare let networkInterface: NetworkInterface;
 export declare let virtualMachine: VirtualMachine;
