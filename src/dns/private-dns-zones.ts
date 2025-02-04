@@ -87,20 +87,24 @@ export async function createAddressEntry(input: {
   dnsZone: azure_native.network.PrivateZone;
   resourceGroup: azure_native.resources.ResourceGroup;
 }): Promise<boolean> {
-  const privateRecordSet = new azure_native.network.PrivateRecordSet(
-    `arecord-${input.name}-${input.dnsZone.name}`,
-    {
-      aRecords: [
+  const recordSet = pulumi
+    .all([input.dnsZone.name, input.resourceGroup.name])
+    .apply(([dnsZoneName, resourceGroupName]) => {
+      return new azure_native.network.PrivateRecordSet(
+        `arecord-${input.name}-${dnsZoneName}`,
         {
-          ipv4Address: input.ipAddress,
+          aRecords: [
+            {
+              ipv4Address: input.ipAddress,
+            },
+          ],
+          privateZoneName: dnsZoneName,
+          recordType: 'A',
+          relativeRecordSetName: input.name,
+          resourceGroupName: resourceGroupName,
+          ttl: 3600,
         },
-      ],
-      privateZoneName: input.dnsZone.name,
-      recordType: 'A',
-      relativeRecordSetName: input.name,
-      resourceGroupName: input.resourceGroup.name,
-      ttl: 3600,
-    },
-  );
+      );
+    });
   return true;
 }

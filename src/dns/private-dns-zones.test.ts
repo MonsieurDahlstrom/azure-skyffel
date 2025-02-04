@@ -8,10 +8,31 @@ pulumi.runtime.setMocks(
       id: string;
       state: any;
     } {
-      return {
-        id: args.inputs.name + '_id',
-        state: args.inputs,
-      };
+      const { type, id, name } = args;
+      switch (type) {
+        case 'azure-native:network:PrivateZone': {
+          let state = { ...args.inputs };
+          state.name = state.privateZoneName;
+          return {
+            id: args.inputs.privateZoneName + '_id',
+            state,
+          };
+        }
+        case 'azure-native:resources:ResourceGroup': {
+          let state = { ...args.inputs };
+          state.name = state.resourceGroupName;
+          return {
+            id: args.inputs.resourceGroupName + '_id',
+            state,
+          };
+        }
+        default: {
+          return {
+            id: args.inputs.name + '_id',
+            state: args.inputs,
+          };
+        }
+      }
     },
     call: function (args: pulumi.runtime.MockCallArgs) {
       return args.inputs;
@@ -76,6 +97,44 @@ describe('SplitHorizonPrivateDNS', function () {
       expect(SplitHorizonPrivateDNS.zones.get('aks')).toBeInstanceOf(
         azure_native.network.PrivateZone,
       );
+    });
+  });
+
+  describe('#createAddressEntry', function () {
+    let resourceGroup: azure_native.resources.ResourceGroup;
+    let zones: Map<string, pulumi.Output<string>>;
+    let input: any;
+    beforeEach(async function () {
+      resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
+        resourceGroupName: 'rg-test',
+      });
+      zones = new Map<string, pulumi.Output<string>>();
+      zones.set('aks', pulumi.output('privatelink.northeurope.azmk8s.io'));
+      input = {
+        resourceGroup,
+        network: NetworkCore.createNetwork(
+          resourceGroup,
+          'vnet-test',
+          '10.0.0.0/20',
+        ),
+        zones,
+        dnsZoneContributors: [],
+        subscriptionId: '',
+      };
+    });
+    test('is defined', () => {
+      expect(SplitHorizonPrivateDNS.createAddressEntry).toBeTypeOf('function');
+    });
+    test('creates a records', async () => {
+      await SplitHorizonPrivateDNS.setup(input);
+      expect(
+        SplitHorizonPrivateDNS.createAddressEntry({
+          name: 'test',
+          ipAddress: '10.0.0.4',
+          resourceGroup,
+          dnsZone: SplitHorizonPrivateDNS.zones.get('aks')!,
+        }),
+      ).toBeTruthy();
     });
   });
 });
