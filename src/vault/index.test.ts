@@ -149,6 +149,18 @@ describe('Vault', function () {
           );
           expect(cloudInitConfig).toContain(`-d "${input.tls.fqdn}"`);
           expect(cloudInitConfig).toContain(`-m ${input.tls.contactEmail}`);
+          expect(cloudInitConfig).toContain(
+            `cat /tmp/vault-init.json | jq -r '.unseal_keys_b64 | to_entries[] | "az keyvault secret set --name unseal-keys-b64-\\(.key+1)`,
+          );
+          expect(cloudInitConfig).to.not.contain(`--staging`);
+        });
+      });
+      test('cloud-init has staging se', async function () {
+        input.tls.isStaging = true;
+        await Vault.setup(input);
+        Vault.virtualMachine.osProfile.customData.apply((customData) => {
+          let cloudInitConfig = Buffer.from(customData, 'base64').toString();
+          expect(cloudInitConfig).toContain(`--staging`);
         });
       });
     });

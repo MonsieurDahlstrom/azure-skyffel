@@ -38,6 +38,7 @@ export type VaultInput = {
     contactEmail: string;
     cloudflareApiToken: string;
     fqdn: string;
+    isStaging: boolean;
   };
 };
 export let networkInterface: NetworkInterface;
@@ -86,7 +87,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
     .apply(async ([keyVaultId, keyVaultName, vaultIdentityClientId]) => {
       const assignment1 = AzureRoles.assignRole({
         principal: { id: vaultIdentityClientId, type: 'ServicePrincipal' },
-        rbacRole: AzureRoles.RoleUUID.KeyVaultSecretsUser,
+        rbacRole: AzureRoles.RoleUUID.KeyVaultSecretOfficer,
         scope: keyVaultId,
         key: keyVaultName,
         subscriptionId: input.subscriptionId,
@@ -163,6 +164,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
           contactEmail: input.tls.contactEmail,
           cloudflareApiToken: input.tls.cloudflareApiToken,
           hostname: input.tls.fqdn,
+          staging: input.tls.isStaging,
         },
       });
     });
@@ -249,6 +251,7 @@ type CloudConfigInput = {
     contactEmail: string;
     cloudflareApiToken: string;
     hostname: string;
+    staging: boolean;
   };
 };
 
@@ -294,9 +297,10 @@ write_files:
       #!/bin/bash
       az login --identity
       export VAULT_ADDR="https://${input.tls.hostname}:8200"
-      vault operator init -format json -key-shares=5 -key-threshold=3 > /tmp/vault-init.json
-      cat /tmp/vault-init.json | jq -r '.unseal_keys_b64 | to_entries[] | "az keyvault secret set --name unseal-keys-b64-\(.key+1) --vault-name ${input.keyVault.name} --value \(.value)"' |  xargs -n 1 -I {} bash -c "{}"
-      cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \(.)"' | xargs -n 1 -I {} bash -c "{}"
+      export VAULT_SKIP_VERIFY=true
+      vault operator init -format json > /tmp/vault-init.json
+      cat /tmp/vault-init.json | jq -r '.unseal_keys_b64 | to_entries[] | "az keyvault secret set --name unseal-keys-b64-\\(.key+1) --vault-name ${input.keyVault.name} --value \\(.value)"' |  xargs -n 1 -I {} bash -c "{}"
+      cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \\(.)"' | xargs -n 1 -I {} bash -c "{}"
       systemctl stop vault.service
       systemctl start vault.service
   - owner: "root:root"
@@ -338,7 +342,7 @@ runcmd:
   - snap set certbot trust-plugin-with-root=ok
   - snap install certbot-dns-cloudflare
   - sudo systemctl enable vault.service
-  - certbot certonly -m ${input.tls.contactEmail} --agree-tos --non-interactive --dns-cloudflare --dns-cloudflare-credentials /opt/vault/certbot/cloudflare.ini -d "${input.tls.hostname}" --dns-cloudflare-propagation-seconds 20
+  - certbot certonly -m ${input.tls.contactEmail} --agree-tos --non-interactive --dns-cloudflare --dns-cloudflare-credentials /opt/vault/certbot/cloudflare.ini -d "${input.tls.hostname}" --dns-cloudflare-propagation-seconds 20 ${input.tls.staging ? '--staging' : ''}
   - cp /etc/letsencrypt/live/${input.tls.hostname}/fullchain.pem /opt/vault/tls/vault_fullchain.pem
   - cp /etc/letsencrypt/live/${input.tls.hostname}/privkey.pem /opt/vault/tls/vault_privatekey.pem
   - chown -R vault:vault /opt/vault/tls

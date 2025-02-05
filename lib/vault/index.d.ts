@@ -22,6 +22,7 @@ export type VaultInput = {
     contactEmail: string;
     cloudflareApiToken: string;
     fqdn: string;
+    isStaging: boolean;
   };
 };
 export declare let networkInterface: NetworkInterface;
