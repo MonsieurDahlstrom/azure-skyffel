@@ -59,9 +59,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
   });
   //Create a keyault to keep the unsealed key for the hashicorp vault
   keyVault = new Vault('vault-nic', {
-    vaultName: randomKeyVaultName.result.apply(
-      (name) => `kv-vault-${name}`,
-    ),
+    vaultName: randomKeyVaultName.result.apply((name) => `kv-vault-${name}`),
     location: input.resourceGroup.location,
     resourceGroupName: input.resourceGroup.name,
     properties: {
