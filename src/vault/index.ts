@@ -286,8 +286,19 @@ write_files:
     content: |
       #!/bin/bash
       systemctl stop vault.service
+  - owner: "root:root"
+    path: /opt/vault/initialise_vault.sh
     permissions: '0770'
     defer: true
+    content: |
+      #!/bin/bash
+      az login --identity
+      export VAULT_ADDR="https://${input.tls.hostname}:8200"
+      vault operator init -format json -key-shares=5 -key-threshold=3 > /tmp/vault-init.json
+      cat /tmp/vault-init.json | jq -r '.unseal_keys_b64 | to_entries[] | "az keyvault secret set --name unseal-keys-b64-\(.key+1) --vault-name ${input.keyVault.name} --value \(.value)"' |  xargs -n 1 -I {} bash -c "{}"
+      cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \(.)"' | xargs -n 1 -I {} bash -c "{}"
+      systemctl stop vault.service
+      systemctl start vault.service
   - owner: "root:root"
     path: /etc/letsencrypt/renewal-hooks/post/vault.sh
     content: |
@@ -332,6 +343,7 @@ runcmd:
   - cp /etc/letsencrypt/live/${input.tls.hostname}/privkey.pem /opt/vault/tls/vault_privatekey.pem
   - chown -R vault:vault /opt/vault/tls
   - systemctl start vault.service
+  - ./opt/vault/initialise_vault.sh
 `;
   return Buffer.from(cloudInitConfig).toString('base64');
 }
