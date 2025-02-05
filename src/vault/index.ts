@@ -52,14 +52,16 @@ export async function setup(input: VaultInput): Promise<boolean> {
   });
   //create a random azure key vault name suffix
   const randomKeyVaultName = new RandomString('vault-name', {
-    length: 15,
+    length: 10,
     special: false,
     lower: true,
     upper: false,
   });
   //Create a keyault to keep the unsealed key for the hashicorp vault
   keyVault = new Vault('vault-nic', {
-    vaultName: randomKeyVaultName.result.apply((name) => `kv-vault-${name}`),
+    vaultName: randomKeyVaultName.result.apply(
+      (name) => `kv-vault-${name}`,
+    ),
     location: input.resourceGroup.location,
     resourceGroupName: input.resourceGroup.name,
     properties: {
@@ -230,7 +232,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
     },
     {
       dependsOn: [networkInterface, input.subnet, keyVault, autoUnsealSecret],
-      replaceOnChanges: ['osProfile.customData'],
+      replaceOnChanges: ['osProfile'],
     },
   );
   return true;
