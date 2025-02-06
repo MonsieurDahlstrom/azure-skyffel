@@ -102,6 +102,7 @@ export async function createAddressEntry(input: {
           resourceGroupName: resourceGroupName,
           ttl: 3600,
         },
+        { dependsOn: [input.dnsZone, input.resourceGroup] },
       );
     });
   return true;
