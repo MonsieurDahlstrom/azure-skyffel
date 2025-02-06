@@ -60,8 +60,10 @@ export async function setup(input: VaultInput): Promise<boolean> {
     resourceGroupName: input.resourceGroup.name,
   });
   //create a random azure key vault name suffix
-  const kvOfficers =
-    input.keyVault.officers === undefined ? [] : input.keyVault.officers;
+  let kvOfficers = [];
+  if (input.keyVault.officers) {
+    kvOfficers.push(...input.keyVault.officers);
+  }
   vaultIdentity.principalId.apply((principalId) => {
     kvOfficers.push({ id: principalId, type: 'UserAssignedIdentity' });
   });
