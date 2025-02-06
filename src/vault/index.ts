@@ -40,7 +40,6 @@ export type VaultInput = {
   };
   vmSize: string;
   tenantId: string;
-  keyVaultReaders: { principalId: string; type: string }[];
   subscriptionId: string;
   tls: {
     contactEmail: string;
