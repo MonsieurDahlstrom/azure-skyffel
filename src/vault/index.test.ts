@@ -82,7 +82,7 @@ describe('Vault', function () {
 
     describe('post #setup', function () {
       let network: azure_native.network.Network;
-      let subnet: azure_native.network.Subnet;
+      let subnetVault, subnetKV: azure_native.network.Subnet;
       let resourceGroup: azure_native.resources.ResourceGroup;
       let password: pulumi.Output<string>;
       let input: Vault.VaultInput;
@@ -90,9 +90,15 @@ describe('Vault', function () {
       let subscriptionId: string;
       let admins: { principalId: string; type: string }[];
       let admin: { principalId: string; type: string };
+      let dnsZone: azure_native.network.PrivateZone;
       beforeEach(async function () {
         resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
           resourceGroupName: 'rg-test',
+        });
+        dnsZone = new azure_native.network.PrivateZone('dns-zone-test', {
+          location: 'Global',
+          privateZoneName: 'monsieurdahlstrom.dev',
+          resourceGroupName: resourceGroup.name,
         });
         network = NetworkCore.createNetwork(
           resourceGroup,
@@ -105,8 +111,14 @@ describe('Vault', function () {
           virtualNetworkName: network.name,
           resourceGroupName: resourceGroup.name,
         });
+        snets.set('subnet2', {
+          addressPrefix: '10.0.0.1/25',
+          virtualNetworkName: network.name,
+          resourceGroupName: resourceGroup.name,
+        });
         const subnets = NetworkCore.createSubnets(snets);
-        subnet = subnets.get('subnet1');
+        subnetVault = subnets.get('subnet1');
+        subnetKV = subnets.get('subnet2');
         admin = { principalId: uuidv4(), type: 'Group' };
         subscriptionId = uuidv4();
         tenantId = uuidv4();
@@ -117,8 +129,12 @@ describe('Vault', function () {
             contactEmail: 'mathias@monsieurdahlstrom.com',
             fqdn: 'vault.monsieurdahlstrom.dev',
           },
+          keyVault: {
+            subnet: subnetKV,
+            dnsZone,
+          },
           resourceGroup,
-          subnet,
+          subnet: subnetVault,
           subscriptionId,
           tenantId,
           user: {
@@ -150,7 +166,7 @@ describe('Vault', function () {
           expect(cloudInitConfig).toContain(`-d "${input.tls.fqdn}"`);
           expect(cloudInitConfig).toContain(`-m ${input.tls.contactEmail}`);
           expect(cloudInitConfig).toContain(
-            `cat /tmp/vault-init.json | jq -r '.unseal_keys_b64 | to_entries[] | "az keyvault secret set --name unseal-keys-b64-\\(.key+1)`,
+            `cat /tmp/vault-init.json | jq -r '.recovery_keys_b64 | to_entries[] | "az keyvault secret set --name recovery-keys-b64-\\(.key+1)`,
           );
           expect(cloudInitConfig).to.not.contain(`--staging`);
         });

@@ -7,6 +7,7 @@ import {
   VirtualNetwork,
   Subnet,
   NetworkInterface,
+  PrivateZone,
 } from '@pulumi/azure-native/network';
 import {
   VirtualMachine,
@@ -16,15 +17,22 @@ import {
   DiskCreateOptionTypes,
   StorageAccountTypes,
 } from '@pulumi/azure-native/compute';
-import { PrivateZone } from '@pulumi/azure-native/network';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { Vault, Key, JsonWebKeyType } from '@pulumi/azure-native/keyvault';
 import { UserAssignedIdentity } from '@pulumi/azure-native/managedidentity';
 import { RoleAssignment } from '@pulumi/azure-native/authorization';
 import * as AzureRoles from '../rbac/roles';
+import * as KeyVault from '../kms/azure-key-vault';
 
 export type VaultInput = {
   subnet: Subnet;
+  keyVault: {
+    subnet: Subnet;
+    dnsZone: PrivateZone;
+    readers?: AzureRoles.RbacAssignee[];
+    officers?: AzureRoles.RbacAssignee[];
+    dataAccessManagers?: AzureRoles.RbacAssignee[];
+  };
   resourceGroup: ResourceGroup;
   user: {
     username: string;
@@ -32,7 +40,7 @@ export type VaultInput = {
   };
   vmSize: string;
   tenantId: string;
-  admins: { principalId: string; type: string }[];
+  keyVaultReaders: { principalId: string; type: string }[];
   subscriptionId: string;
   tls: {
     contactEmail: string;
@@ -52,55 +60,23 @@ export async function setup(input: VaultInput): Promise<boolean> {
     resourceGroupName: input.resourceGroup.name,
   });
   //create a random azure key vault name suffix
-  const randomKeyVaultName = new RandomString('vault-name', {
-    length: 10,
-    special: false,
-    lower: true,
-    upper: false,
+  const kvOfficers =
+    input.keyVault.officers === undefined ? [] : input.keyVault.officers;
+  vaultIdentity.principalId.apply((principalId) => {
+    kvOfficers.push({ id: principalId, type: 'UserAssignedIdentity' });
   });
-  //Create a keyault to keep the unsealed key for the hashicorp vault
-  keyVault = new Vault('vault-nic', {
-    vaultName: randomKeyVaultName.result.apply((name) => `kv-vault-${name}`),
-    location: input.resourceGroup.location,
-    resourceGroupName: input.resourceGroup.name,
-    properties: {
-      enableRbacAuthorization: true,
-      sku: {
-        family: 'A',
-        name: 'standard',
-      },
-      tenantId: input.tenantId,
-    },
+  const KVTuple = await KeyVault.create({
+    name: 'vault',
+    resourceGroup: input.resourceGroup,
+    subnet: input.keyVault.subnet,
+    dnsZone: input.keyVault.dnsZone,
+    readers: input.keyVault.readers,
+    tenantId: input.tenantId,
+    subscriptionId: input.subscriptionId,
+    officers: kvOfficers,
+    dataAccessManagers: input.keyVault.dataAccessManagers,
   });
-  const adminRoleAssignments: RoleAssignment[] = [];
-  await input.admins.forEach(async (admin) => {
-    let assignment = await AzureRoles.assignKeyVaultOfficers({
-      principal: { id: admin.principalId, type: admin.type },
-      keyVault,
-      subscriptionId: input.subscriptionId,
-    });
-    adminRoleAssignments.concat(assignment);
-  });
-
-  pulumi
-    .all([keyVault.id, keyVault.name, vaultIdentity.principalId])
-    .apply(async ([keyVaultId, keyVaultName, vaultIdentityClientId]) => {
-      const assignment1 = AzureRoles.assignRole({
-        principal: { id: vaultIdentityClientId, type: 'ServicePrincipal' },
-        rbacRole: AzureRoles.RoleUUID.KeyVaultSecretOfficer,
-        scope: keyVaultId,
-        key: keyVaultName,
-        subscriptionId: input.subscriptionId,
-      });
-      const assignment2 = AzureRoles.assignRole({
-        principal: { id: vaultIdentityClientId, type: 'ServicePrincipal' },
-        rbacRole: AzureRoles.RoleUUID.KeyVaultCryptoUser,
-        scope: keyVaultId,
-        key: keyVaultName,
-        subscriptionId: input.subscriptionId,
-      });
-      adminRoleAssignments.concat([assignment1, assignment2]);
-    });
+  keyVault = KVTuple[0];
   const autoUnsealSecret = new Key(
     'secret-vault-auto-unseal',
     {
@@ -113,7 +89,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
         keyOps: ['wrapKey', 'unwrapKey'],
       },
     },
-    { dependsOn: adminRoleAssignments },
+    { dependsOn: KVTuple[1] },
   );
   // NIC
   networkInterface = new NetworkInterface('vault-nic', {
@@ -255,6 +231,9 @@ type CloudConfigInput = {
   };
 };
 
+/*
+https://medium.com/@czembower/recommended-patterns-for-vault-unseal-and-recovery-key-management-d6366a2f4607
+*/
 function GetCloudInitCustomData(input: CloudConfigInput): string {
   const cloudInitConfig = `
 #cloud-config
@@ -299,8 +278,9 @@ write_files:
       export VAULT_ADDR="https://${input.tls.hostname}:8200"
       export VAULT_SKIP_VERIFY=true
       vault operator init -format json > /tmp/vault-init.json
-      cat /tmp/vault-init.json | jq -r '.unseal_keys_b64 | to_entries[] | "az keyvault secret set --name unseal-keys-b64-\\(.key+1) --vault-name ${input.keyVault.name} --value \\(.value)"' |  xargs -n 1 -I {} bash -c "{}"
+      cat /tmp/vault-init.json | jq -r '.recovery_keys_b64 | to_entries[] | "az keyvault secret set --name recovery-keys-b64-\\(.key+1) --vault-name ${input.keyVault.name} --value \\(.value)"' |  xargs -n 1 -I {} bash -c "{}"
       cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \\(.)"' | xargs -n 1 -I {} bash -c "{}"
+      rm /tmp/vault-init.json
       systemctl stop vault.service
       systemctl start vault.service
   - owner: "root:root"

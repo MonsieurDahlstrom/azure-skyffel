@@ -23,7 +23,7 @@ pulumi.runtime.setMocks(
   false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
 );
 
-describe('SplitHorizonPrivateDNS', function () {
+describe('RBAC Roles Assignments', function () {
   let AzureRoles: typeof import('./roles');
   let NetworkCore: typeof import('../network/core');
   beforeEach(async function () {
@@ -47,7 +47,7 @@ describe('SplitHorizonPrivateDNS', function () {
       );
     });
     test('has keyvault secrets user', function () {
-      expect(AzureRoles.RoleUUID.KeyVaultSecretsUser).toBe(
+      expect(AzureRoles.RoleUUID.KeyVaultSecretUser).toBe(
         '4633458b-17de-408a-b874-0445c86b69e6',
       );
     });
@@ -83,11 +83,22 @@ describe('SplitHorizonPrivateDNS', function () {
       expect(AzureRoles.assignRole).toBeDefined();
     });
     test('assigns a role', function () {
+      const resourceGroup = new azure_native.resources.ResourceGroup(
+        'rg-test',
+        {
+          resourceGroupName: 'rg-test',
+        },
+      );
+      const network = NetworkCore.createNetwork(
+        resourceGroup,
+        'vnet-test',
+        '10.0.0.0/20',
+      );
       const roleAssignment = AzureRoles.assignRole({
         principal: { id: 'principal-id', type: 'principal-type' },
         rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-        scope: 'scope',
-        key: 'key',
+        scope: network.id,
+        key: 'kubernetes',
         subscriptionId: 'subscription-id',
       });
       pulumi
@@ -96,15 +107,24 @@ describe('SplitHorizonPrivateDNS', function () {
           roleAssignment.principalType,
           roleAssignment.roleDefinitionId,
           roleAssignment.scope,
+          network.id,
         ])
-        .apply(([principalId, principalType, roleDefinitionId, scope]) => {
-          expect(principalId).toBe('principal-id');
-          expect(principalType).toBe('principal-type');
-          expect(roleDefinitionId).toBe(
-            `/subscriptions/subscription-id/providers/Microsoft.Authorization/roleDefinitions/${AzureRoles.RoleUUID.PrivateDNSZoneContributor}`,
-          );
-          expect(scope).toBe(`scope`);
-        });
+        .apply(
+          ([
+            principalId,
+            principalType,
+            roleDefinitionId,
+            scope,
+            networkId,
+          ]) => {
+            expect(principalId).toBe('principal-id');
+            expect(principalType).toBe('principal-type');
+            expect(roleDefinitionId).toBe(
+              `/subscriptions/subscription-id/providers/Microsoft.Authorization/roleDefinitions/${AzureRoles.RoleUUID.PrivateDNSZoneContributor}`,
+            );
+            expect(scope).toBe(networkId);
+          },
+        );
     });
   });
 

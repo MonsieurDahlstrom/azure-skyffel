@@ -7,4 +7,5 @@ export * as SplitHorizonPrivateDNS from './dns/private-dns-zones';
 export * as AzureRoles from './rbac/roles';
 export * as Vault from './vault';
 export * as ManagedAks from './aks/managed-cluster';
+export * as AzureKeyVault from './kms/azure-key-vault';
 //# sourceMappingURL=index.d.ts.map
