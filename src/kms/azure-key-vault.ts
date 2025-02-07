@@ -24,7 +24,7 @@ export async function create(
   ]
 > {
   const randomKeyVaultName = new Random.RandomString('vault-name', {
-    length: 24 - (input.name.length + 2),
+    length: 24 - (input.name.length + 4),
     special: false,
     lower: true,
     upper: false,
