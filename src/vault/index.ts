@@ -59,13 +59,6 @@ export async function setup(input: VaultInput): Promise<boolean> {
     resourceGroupName: input.resourceGroup.name,
   });
   //create a random azure key vault name suffix
-  let kvOfficers = [];
-  if (input.keyVault.officers) {
-    kvOfficers.push(...input.keyVault.officers);
-  }
-  vaultIdentity.principalId.apply((principalId) => {
-    kvOfficers.push({ id: principalId, type: 'UserAssignedIdentity' });
-  });
   const KVTuple = await KeyVault.create({
     name: 'vault',
     resourceGroup: input.resourceGroup,
@@ -74,10 +67,32 @@ export async function setup(input: VaultInput): Promise<boolean> {
     readers: input.keyVault.readers,
     tenantId: input.tenantId,
     subscriptionId: input.subscriptionId,
-    officers: kvOfficers,
+    officers: input.keyVault.officers,
     dataAccessManagers: input.keyVault.dataAccessManagers,
   });
   keyVault = KVTuple[0];
+  let assignments = [...KVTuple[1]];
+  // add the vault identity to the key vault rbac
+  vaultIdentity.principalId.apply(async (principalId) => {
+    assignments.push(
+      AzureRoles.assignRole({
+        principal: { id: principalId, type: 'UserAssignedIdentity' },
+        rbacRole: AzureRoles.RoleUUID.KeyVaultCryptoUser,
+        scope: keyVault.id,
+        key: 'vault-identity',
+        subscriptionId: input.subscriptionId,
+      }),
+    );
+    assignments.push(
+      AzureRoles.assignRole({
+        principal: { id: principalId, type: 'UserAssignedIdentity' },
+        rbacRole: AzureRoles.RoleUUID.KeyVaultSecretOfficer,
+        scope: keyVault.id,
+        key: 'vault-identity',
+        subscriptionId: input.subscriptionId,
+      }),
+    );
+  });
   const autoUnsealSecret = new Key(
     'secret-vault-auto-unseal',
     {
@@ -90,7 +105,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
         keyOps: ['wrapKey', 'unwrapKey'],
       },
     },
-    { dependsOn: KVTuple[1] },
+    { dependsOn: assignments },
   );
   // NIC
   networkInterface = new NetworkInterface('vault-nic', {
