@@ -76,7 +76,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
   vaultIdentity.principalId.apply(async (principalId) => {
     assignments.push(
       AzureRoles.assignRole({
-        principal: { id: principalId, type: 'UserAssignedIdentity' },
+        principal: { id: principalId, type: 'ServicePrincipal' },
         rbacRole: AzureRoles.RoleUUID.KeyVaultCryptoUser,
         scope: keyVault.id,
         key: 'vault-identity',
@@ -85,7 +85,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
     );
     assignments.push(
       AzureRoles.assignRole({
-        principal: { id: principalId, type: 'UserAssignedIdentity' },
+        principal: { id: principalId, type: 'ServicePrincipal' },
         rbacRole: AzureRoles.RoleUUID.KeyVaultSecretOfficer,
         scope: keyVault.id,
         key: 'vault-identity',
