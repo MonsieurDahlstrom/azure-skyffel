@@ -66,6 +66,9 @@ describe('Vault', function () {
       test('setup is defined', function () {
         expect(Vault.setup).to.be.a('function');
       });
+      test('setup secrets engine is defined', function () {
+        expect(Vault.setupKubernetesSecretEngine).to.be.a('function');
+      });
       test('expected properties defined', async function () {
         expect(Vault.virtualMachine).to.be.undefined;
         expect(Vault.networkInterface).to.be.undefined;
