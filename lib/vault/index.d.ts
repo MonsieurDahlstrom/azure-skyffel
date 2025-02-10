@@ -20,7 +20,7 @@ export type VaultInput = {
   };
   resourceGroup: ResourceGroup;
   user: {
-    username: string;
+    username: pulumi.Output<string>;
     password: pulumi.Output<string>;
   };
   vmSize: string;

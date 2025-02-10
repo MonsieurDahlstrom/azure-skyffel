@@ -62,28 +62,22 @@ describe('Vault', function () {
   });
 
   describe('Vault module', function () {
-    describe('before #setup', function () {
+    describe('pre #setup', function () {
       test('setup is defined', function () {
-        expect(Vault.setup).toBeDefined();
+        expect(Vault.setup).to.be.a('function');
       });
-      test('#virtualMachine is not defined', function () {
-        expect(Vault.virtualMachine).toBeUndefined();
-      });
-      test('#networkInterface is undefined', function () {
-        expect(Vault.networkInterface).toBeUndefined();
-      });
-      test('#keyVault is defined', function () {
-        expect(Vault.keyVault).toBeUndefined();
-      });
-      test('#vaultIdentity is defined', function () {
-        expect(Vault.vaultIdentity).toBeUndefined();
+      test('expected properties defined', async function () {
+        expect(Vault.virtualMachine).to.be.undefined;
+        expect(Vault.networkInterface).to.be.undefined;
+        expect(Vault.keyVault).to.be.undefined;
+        expect(Vault.vaultIdentity).to.be.undefined;
       });
     });
-
     describe('post #setup', function () {
       let network: azure_native.network.Network;
       let subnetVault, subnetKV: azure_native.network.Subnet;
       let resourceGroup: azure_native.resources.ResourceGroup;
+      let username: pulumi.Output<string>;
       let password: pulumi.Output<string>;
       let input: Vault.VaultInput;
       let tenantId: string;
@@ -91,6 +85,7 @@ describe('Vault', function () {
       let admins: { principalId: string; type: string }[];
       let admin: { principalId: string; type: string };
       let dnsZone: azure_native.network.PrivateZone;
+
       beforeEach(async function () {
         resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
           resourceGroupName: 'rg-test',
@@ -122,6 +117,8 @@ describe('Vault', function () {
         admin = { principalId: uuidv4(), type: 'Group' };
         subscriptionId = uuidv4();
         tenantId = uuidv4();
+        password = pulumi.interpolate('test_password');
+        username = pulumi.interpolate('test_username');
         input = {
           admins: [admin],
           tls: {
@@ -138,26 +135,32 @@ describe('Vault', function () {
           subscriptionId,
           tenantId,
           user: {
-            password: pulumi.interpolate`dummy_test_password`,
-            username: 'testuser',
+            password,
+            username,
           },
           vmSize: 'standard_b2s',
         };
       });
+
       test('#virtualMachine is defined', async function () {
         await Vault.setup(input);
-        expect(Vault.virtualMachine).toBeDefined();
+        expect(Vault.virtualMachine).to.be.a('object');
       });
-      test('#networkInterface is defined', function () {
-        expect(Vault.networkInterface).toBeDefined();
+
+      test('#networkInterface is defined', async function () {
+        await Vault.setup(input);
+        expect(Vault.networkInterface).to.be.a('object');
       });
-      test('#keyVault is defined', function () {
-        expect(Vault.keyVault).toBeDefined();
+      test('#keyVault is defined', async function () {
+        await Vault.setup(input);
+        expect(Vault.keyVault).to.be.a('object');
       });
-      test('#vaultIdentity is defined', function () {
-        expect(Vault.vaultIdentity).toBeDefined();
+      test('#vaultIdentity is defined', async function () {
+        await Vault.setup(input);
+        expect(Vault.vaultIdentity).to.be.a('object');
       });
-      test('cloud-init', function () {
+      test('cloud-init', async function () {
+        await Vault.setup(input);
         Vault.virtualMachine.osProfile.customData.apply((customData) => {
           let cloudInitConfig = Buffer.from(customData, 'base64').toString();
           expect(cloudInitConfig).toContain(
@@ -171,7 +174,7 @@ describe('Vault', function () {
           expect(cloudInitConfig).to.not.contain(`--staging`);
         });
       });
-      test('cloud-init has staging se', async function () {
+      test('cloud-init has staging tls certificate', async function () {
         input.tls.isStaging = true;
         await Vault.setup(input);
         Vault.virtualMachine.osProfile.customData.apply((customData) => {
