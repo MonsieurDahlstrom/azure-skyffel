@@ -89,10 +89,9 @@ export function createCloudInitCustomData(
         cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \\(.)"' | xargs -n 1 -I {} bash -c "{}"
         systemctl stop vault.service
         systemctl start vault.service
-        cat /tmp/vault-init.json | jq -r '.root_token | "export VAULT_TOKEN=\\(.)"' | xargs -n 1 -I {} bash -c "{}"
+        export VAULT_TOKEN=$(cat /tmp/vault-init.json | jq -r '.root_token')
         export VAULT_ADDR="https://${input.tls.hostname}:8200"
         export VAULT_SKIP_VERIFY=${input.tls.staging ? 'true' : 'false'}
-        vault login
         vault secrets enable kubernetes
         vault write -f kubernetes/config service_account_jwt="${input.kubernetes.token}" kubernetes_host="${input.kubernetes.server}" kubernetes_ca_cert="${input.kubernetes.caCert}"
     - owner: "root:root"
