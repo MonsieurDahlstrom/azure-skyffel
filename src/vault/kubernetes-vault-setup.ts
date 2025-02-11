@@ -3,32 +3,34 @@ import * as azure_native from '@pulumi/azure-native';
 import * as kubernetes from '@pulumi/kubernetes';
 
 export type RegisterKubernetesSecretEngineArgs = {
-  kubeConfig: pulumi.Input<string>;
-  vault: {
-    fqdn: pulumi.Input<string>;
-    chartVersion?: pulumi.Input<string>;
-  };
+  kubeconfig: pulumi.Input<string>;
+  fqdn: pulumi.Input<string>;
+  vaultChartVersion?: pulumi.Input<string>;
 };
 
-export async function setupKubernetesSecretEngine(
+export let token: pulumi.Output<string>;
+
+export async function setup(
   args: RegisterKubernetesSecretEngineArgs,
 ): Promise<boolean> {
+  const vaultURL = `https://${args.fqdn}:8200`;
   const aksProvider = new kubernetes.Provider('aks', {
-    kubeconfig: args.kubeConfig,
+    kubeconfig: args.kubeconfig,
   });
-  const vaultHelmChart = new kubernetes.helm.v3.Chart(
+  const vaultHelmChart = new kubernetes.helm.v3.Release(
     'vault',
     {
-      repo: 'hashicorp',
       chart: 'vault',
-      version: args.vault.chartVersion ? args.vault.chartVersion : undefined,
-      fetchOpts: {
+      name: 'vault',
+      createNamespace: true,
+      version: args.vaultChartVersion ? args.vaultChartVersion : undefined,
+      repositoryOpts: {
         repo: 'https://helm.releases.hashicorp.com',
       },
       namespace: 'vault',
       values: {
         global: {
-          externalVaultAddr: `https://${args.vault.fqdn}:8200`,
+          externalVaultAddr: vaultURL,
         },
       },
     },
@@ -51,6 +53,9 @@ export async function setupKubernetesSecretEngine(
   const clusterrole = new kubernetes.rbac.v1.ClusterRole(
     'vault-cluster-admin',
     {
+      metadata: {
+        name: 'k8s-full-secrets-abilities-with-labels',
+      },
       rules: [
         {
           apiGroups: [''],
@@ -94,5 +99,6 @@ export async function setupKubernetesSecretEngine(
     },
     { dependsOn: [clusterrole, vaultHelmChart], provider: aksProvider },
   );
+  token = secret.data.token!.apply((token) => token);
   return true;
 }

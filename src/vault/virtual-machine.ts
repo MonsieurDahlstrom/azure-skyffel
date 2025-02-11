@@ -1,6 +1,8 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
 import { createCloudInitCustomData } from './cloud-init';
+import * as Kubernetes from './kubernetes-vault-setup';
+import { parse as parseYaml } from 'yaml';
 
 type CreateVirtualMachine = {
   keyVault: azure_native.keyvault.Vault;
@@ -19,12 +21,22 @@ type CreateVirtualMachine = {
   };
   vaultIdentity: azure_native.managedidentity.UserAssignedIdentity;
   vmSize: string;
+  kubeconfig: string;
 };
 export async function createVirtualMachine(
   input: CreateVirtualMachine,
 ): Promise<
   [azure_native.compute.VirtualMachine, azure_native.network.NetworkInterface]
 > {
+  // Install kubernetes helm chart, service account token and cluster role
+  const kubeconfigMap = parseYaml(input.kubeconfig);
+  const clusterServer = kubeconfigMap.clusters[0].cluster['server'];
+  const clusterCaCert =
+    kubeconfigMap.clusters[0].cluster['certificate-authority-data'];
+  await Kubernetes.setup({
+    kubeconfig: input.kubeconfig,
+    fqdn: input.tls.fqdn,
+  });
   // NIC
   const networkInterface = new azure_native.network.NetworkInterface(
     'vault-nic',
@@ -85,6 +97,11 @@ export async function createVirtualMachine(
             cloudflareApiToken: input.tls.cloudflareApiToken,
             hostname: input.tls.fqdn,
             staging: input.tls.isStaging,
+          },
+          kubernetes: {
+            server: clusterServer,
+            caCert: clusterCaCert,
+            token: Kubernetes.token,
           },
         }),
         linuxConfiguration: {

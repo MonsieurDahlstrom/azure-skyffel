@@ -33,6 +33,11 @@ type CreateCloudInitCustomData = {
     hostname: string;
     staging: boolean;
   };
+  kubernetes: {
+    token: pulumi.Output<string>;
+    server: string;
+    caCert: string;
+  };
 };
 export function createCloudInitCustomData(
   input: CreateCloudInitCustomData,
@@ -82,9 +87,14 @@ export function createCloudInitCustomData(
         vault operator init -format json > /tmp/vault-init.json
         cat /tmp/vault-init.json | jq -r '.recovery_keys_b64 | to_entries[] | "az keyvault secret set --name recovery-keys-b64-\\(.key+1) --vault-name ${input.keyVault.name} --value \\(.value)"' |  xargs -n 1 -I {} bash -c "{}"
         cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \\(.)"' | xargs -n 1 -I {} bash -c "{}"
-        rm /tmp/vault-init.json
         systemctl stop vault.service
         systemctl start vault.service
+        cat /tmp/vault-init.json | jq -r '.root_token | "export VAULT_TOKEN=\\(.)"' | xargs -n 1 -I {} bash -c "{}"
+        export VAULT_ADDR="https://${input.tls.hostname}:8200"
+        export VAULT_SKIP_VERIFY=${input.tls.staging ? 'true' : 'false'}
+        vault auth enable kubernetes
+        vault write auth/kubernetes/configs token_reviewer_jwt="${input.kubernetes.token}" kubernetes_host="${input.kubernetes.server}" kubernetes_ca_cert="${input.kubernetes.caCert}" issuer="https://kubernetes.default.svc.cluster.local"
+        rm /tmp/vault-init.json
     - owner: "root:root"
       path: /etc/letsencrypt/renewal-hooks/post/vault.sh
       content: |

@@ -14,6 +14,11 @@ type CreateCloudInitCustomData = {
     hostname: string;
     staging: boolean;
   };
+  kubernetes: {
+    token: pulumi.Output<string>;
+    server: string;
+    caCert: string;
+  };
 };
 export declare function createCloudInitCustomData(
   input: CreateCloudInitCustomData,

@@ -9,7 +9,6 @@ import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { Vault } from '@pulumi/azure-native/keyvault';
 import { UserAssignedIdentity } from '@pulumi/azure-native/managedidentity';
 import * as AzureRoles from '../rbac/roles';
-export { setupKubernetesSecretEngine } from './kubernetes-secret-engine';
 export type VaultInput = {
   subnet: Subnet;
   keyVault: {
@@ -33,6 +32,7 @@ export type VaultInput = {
     fqdn: string;
     isStaging: boolean;
   };
+  kubeconfig: string;
 };
 export declare let networkInterface: NetworkInterface;
 export declare let virtualMachine: VirtualMachine;

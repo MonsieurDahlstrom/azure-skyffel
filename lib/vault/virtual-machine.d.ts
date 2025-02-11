@@ -17,6 +17,7 @@ type CreateVirtualMachine = {
   };
   vaultIdentity: azure_native.managedidentity.UserAssignedIdentity;
   vmSize: string;
+  kubeconfig: string;
 };
 export declare function createVirtualMachine(
   input: CreateVirtualMachine,

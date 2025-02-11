@@ -25,8 +25,6 @@ import * as AzureRoles from '../rbac/roles';
 import { createKeyVault } from './key-vault';
 import { createVirtualMachine } from './virtual-machine';
 
-export { setupKubernetesSecretEngine } from './kubernetes-secret-engine';
-
 export type VaultInput = {
   subnet: Subnet;
   keyVault: {
@@ -50,6 +48,7 @@ export type VaultInput = {
     fqdn: string;
     isStaging: boolean;
   };
+  kubeconfig: string;
 };
 export let networkInterface: NetworkInterface;
 export let virtualMachine: VirtualMachine;

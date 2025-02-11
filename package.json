@@ -32,8 +32,8 @@
     "@arethetypeswrong/cli": "^0.17.3",
     "@types/jsbn": "^1.2.33",
     "@types/node": "^22.13.1",
-    "prettier": "^3.4.2",
-    "semantic-release": "^24.2.1",
+    "prettier": "^3.5.0",
+    "semantic-release": "^24.2.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   },
@@ -58,7 +58,7 @@
   ],
   "dependencies": {
     "@ediri/azapi": "^1.12.2",
-    "@pulumi/azure-native": "^2.86.0",
+    "@pulumi/azure-native": "^2.87.0",
     "@pulumi/cloudflare": "^5.49.0",
     "@pulumi/kubernetes": "^4.21.1",
     "@pulumi/random": "^4.17.0",

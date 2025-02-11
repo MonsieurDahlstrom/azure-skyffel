@@ -1,6 +1,8 @@
 import { expect, test, describe, beforeEach, failed } from 'vitest';
 import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
+import * as fs from 'fs';
+import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 pulumi.runtime.setMocks(
@@ -66,9 +68,6 @@ describe('Vault', function () {
       test('setup is defined', function () {
         expect(Vault.setup).to.be.a('function');
       });
-      test('setup secrets engine is defined', function () {
-        expect(Vault.setupKubernetesSecretEngine).to.be.a('function');
-      });
       test('expected properties defined', async function () {
         expect(Vault.virtualMachine).to.be.undefined;
         expect(Vault.networkInterface).to.be.undefined;
@@ -133,6 +132,9 @@ describe('Vault', function () {
             subnet: subnetKV,
             dnsZone,
           },
+          kubeconfig: fs
+            .readFileSync(path.resolve(__dirname, 'kubeconfig.test.yaml'))
+            .toString(),
           resourceGroup,
           subnet: subnetVault,
           subscriptionId,
@@ -162,7 +164,7 @@ describe('Vault', function () {
         await Vault.setup(input);
         expect(Vault.vaultIdentity).to.be.a('object');
       });
-      test('cloud-init', async function () {
+      test('cloud-init has certbot configuration', async function () {
         await Vault.setup(input);
         Vault.virtualMachine.osProfile.customData.apply((customData) => {
           let cloudInitConfig = Buffer.from(customData, 'base64').toString();
@@ -171,10 +173,16 @@ describe('Vault', function () {
           );
           expect(cloudInitConfig).toContain(`-d "${input.tls.fqdn}"`);
           expect(cloudInitConfig).toContain(`-m ${input.tls.contactEmail}`);
+          expect(cloudInitConfig).to.not.contain(`--staging`);
+        });
+      });
+      test('cloud-init script that initalises and stores keys', async function () {
+        await Vault.setup(input);
+        Vault.virtualMachine.osProfile.customData.apply((customData) => {
+          let cloudInitConfig = Buffer.from(customData, 'base64').toString();
           expect(cloudInitConfig).toContain(
             `cat /tmp/vault-init.json | jq -r '.recovery_keys_b64 | to_entries[] | "az keyvault secret set --name recovery-keys-b64-\\(.key+1)`,
           );
-          expect(cloudInitConfig).to.not.contain(`--staging`);
         });
       });
       test('cloud-init has staging tls certificate', async function () {
@@ -183,6 +191,26 @@ describe('Vault', function () {
         Vault.virtualMachine.osProfile.customData.apply((customData) => {
           let cloudInitConfig = Buffer.from(customData, 'base64').toString();
           expect(cloudInitConfig).toContain(`--staging`);
+        });
+      });
+      test('cloud-init has kubernetes configuration', async function () {
+        input.tls.isStaging = true;
+        await Vault.setup(input);
+        Vault.virtualMachine.osProfile.customData.apply((customData) => {
+          let cloudInitConfig = Buffer.from(customData, 'base64').toString();
+          expect(cloudInitConfig).toContain(`vault auth enable kubernetes`);
+          expect(cloudInitConfig).toContain(
+            `vault write auth/kubernetes/configs`,
+          );
+          expect(cloudInitConfig).toContain(
+            `kubernetes_ca_cert="LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUU2VENDQXRHZ0F3SUJBZ0lSQU9VSVZRWklBM1lxSmF0ZTNILzhUMWt3RFFZSktvWklodmNOQVFFTEJRQXcKRFRFTE1Ba0dBMVVFQXhNQ1kyRXdJQmNOTWpVd01URTFNVEF5TXpNMldoZ1BNakExTlRBeE1UVXhNRE16TXpaYQpNQTB4Q3pBSkJnTlZCQU1UQW1OaE1JSUNJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBZzhBTUlJQ0NnS0NBZ0VBCm5semRBTTlkMWM1bE5FQ2hFZDZ3Z3VhUzdQdTQweGRhWFo1ZllOeDhVUFdjdHhzWCtNUXVSbkwxTHZNNW1IVDgKNDd1Tm9NcXM4OVJqc3NyRnRaQnlUL1ZXNms4akxZYjNDaks3VGw5dmtIenlLK3l3aFFOVzBMTURpa3ZUVVJnNQo0VlFaWE5iQ0lyc3pOSU12S2lBNUVnZ3g5N29Sc2oyZDNCbUwvZ1V1M2trb2VrR1l1YWszS3NqalE5QkFlSDh0Cm42VDBnVU5nNytXcUNLd0g3RmFXWXdtRmFza3lMa2oyMjJTU3hzMkIrdzAxUkozb2RlK2hFeU8wU2pTRVpDemoKTytqcDJHK1FRNDRtQXBBUExIem5jMG5ia0VuN3Z1VTZ1cnByMWRiM0JNRXNIalMvM1hNd2txUFlNRURKVUNDawpkY3BTZ25mMDBibHFqYlRKV09QU0o4MnFtODJiMTJGeWhGUzdSdGhyRm9ZY3ozcVBUQ25lZUJzUi8zL2Yxa3BqCm5YQk1zUUpydzJoRjhOek1TTkFQMjdkT2ZUMlc3UUZ6ZWdWc1kwQ0Z5OXN0NElvRFhqZUdZS2RYNlQ2T0twTDAKUTYzSnFDRUJtK2pKOWpSK09wZ0czV0pXOTRnQytKR1VMbHJvNHpuUUtKUTcrT3BORnNPOU5SR25SL2F4MmYwQgo2ZzYxTDdWUW1aT0dZVXQxTmloekR5bmE3TnNjbHJCZmlHOWMvQVJ1OUdVbFVBVFkyL01kR3NWR1JFM044eUZQCnlKbmNsTk5UWFl2OWZQRFRhWERxVTIxdzFKZEZIVHpybHAzQ1JNREMzTGloMkE4UWlXQk9hUDJqU1h6V1FhRzcKSlpjR05HQWNlcFVoQXk3VkFObEtqemJpOVBoZWEvZGRCZnZJamFmbmRJOENBd0VBQWFOQ01FQXdEZ1lEVlIwUApBUUgvQkFRREFnS2tNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdIUVlEVlIwT0JCWUVGRHdlc2lSUERHL2sxTDJzCmZ0TXdST1hIUDJqZk1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQ0FRQ1orbE9lL1lHdC9pSUVudEdFTE1YZ1dUa0sKNzNLTzJoZzlWVjcxM2FKbWVnNFV6M2tEamF4U2pmN1pTWndPTmdsaTBVOVBoZlRLRnBMYUk0ZlNMV1V2eDJRQQpTSW5PUVI1TWlQWGRFNjcvNkZpOW56dDRTdUJwbTNPSkFHRTRjWHpRMXR4NzE2WDF2aTJLa2JKS0tBVHBheDFGClU0Q1pEVWZ3OS95T29rK0FnNlJubkw0aU5nZWdZWmdQT3poSGVHOVBpNUkxZ0dPbW5lRy93eGV3Z09wR3p2V3EKNGFKN252Ri84cUFMeCttL0hSQXEzSHM1eW9uS0pDKzFJTStOMUJPWkxkckVnS2gvTzU0SUNxSk1rZGJzWG16OAp1NzJuMUNmV1k1N3NXRVF1YVJubnV5d1JDd1pyYkNtaWtLRk5yZTM2dHFyVnNZZDNDVGJUUlJ6SWNFaWJRS1hXCk5lRDBtSGRHeFpVUzNLeEpDQTdqYzgzU21rYjhSZ0RTTlloVE1zQTZ3aDJmeDFmclY0dWcxbmpteEhDVWhDdzgKSlY3TUZIVGZGTWpDZWhFdVBPN1QwUWZKbU9JSS9BR2NLWURuWE5lcFM1MWxwN2hxdG00Z0Y4b3UraEh2a0ZkTwpBQnl5NEZiM1ZnQklpdkJ3aHMyZk82Vno5NkNub1JLWG43UVF6QjlSZE5vT21WWjN2MWhMMUR3eDBXR3oyMWxtClUxMFhFUVpubWsvRDBDWTAwMVRlZTFwbUU5aGpQd0RiL0cxTGtQbWpWTUlJcFNPY0liUVRMOVA1N2dEU3BEQnQKa3RwQlhlR0VpRkp6YkhQL3R1Sk12d204cmdxaWFtdkVSaXdLb0twYnlJWWUrWDdETDZpOXg2b2RvMll5anVOYwpHN2FxRWFyN2VGTnVjeXNWNUE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="`,
+          );
+          expect(cloudInitConfig).toContain(
+            `kubernetes_host="https://aks-development-2btnrxnr.privatelink.swedencentral.azmk8s.io:443"`,
+          );
+          expect(cloudInitConfig).toContain(
+            `issuer="https://kubernetes.default.svc.cluster.local"`,
+          );
         });
       });
     });

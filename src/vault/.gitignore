@@ -1,3 +1,4 @@
 *.yaml
 *.pem
 *.hcl
+!kubeconfig.yaml
