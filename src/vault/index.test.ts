@@ -87,6 +87,7 @@ describe('Vault', function () {
       let admins: { principalId: string; type: string }[];
       let admin: { principalId: string; type: string };
       let dnsZone: azure_native.network.PrivateZone;
+      let kubeconfig: pulumi.Output<string>;
 
       beforeEach(async function () {
         resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
@@ -121,6 +122,10 @@ describe('Vault', function () {
         tenantId = uuidv4();
         password = pulumi.interpolate('test_password');
         username = pulumi.interpolate('test_username');
+        const kubeconfigString = fs
+          .readFileSync(path.resolve(__dirname, 'kubeconfig.test.yaml'))
+          .toString();
+        kubeconfig = pulumi.Output.create(kubeconfigString);
         input = {
           admins: [admin],
           tls: {
@@ -132,9 +137,7 @@ describe('Vault', function () {
             subnet: subnetKV,
             dnsZone,
           },
-          kubeconfig: fs
-            .readFileSync(path.resolve(__dirname, 'kubeconfig.test.yaml'))
-            .toString(),
+          kubeconfig,
           resourceGroup,
           subnet: subnetVault,
           subscriptionId,

@@ -21,7 +21,7 @@ type CreateVirtualMachine = {
   };
   vaultIdentity: azure_native.managedidentity.UserAssignedIdentity;
   vmSize: string;
-  kubeconfig: string;
+  kubeconfig: pulumi.Output<string>;
 };
 export async function createVirtualMachine(
   input: CreateVirtualMachine,
@@ -29,10 +29,14 @@ export async function createVirtualMachine(
   [azure_native.compute.VirtualMachine, azure_native.network.NetworkInterface]
 > {
   // Install kubernetes helm chart, service account token and cluster role
-  const kubeconfigMap = parseYaml(input.kubeconfig);
-  const clusterServer = kubeconfigMap.clusters[0].cluster['server'];
-  const clusterCaCert =
-    kubeconfigMap.clusters[0].cluster['certificate-authority-data'];
+  const clusterCaCert = input.kubeconfig.apply(
+    (kubeconfig): string =>
+      parseYaml(kubeconfig).clusters[0]!.cluster!['certificate-authority-data'],
+  );
+  const clusterServer = input.kubeconfig.apply(
+    (kubeconfig): string =>
+      parseYaml(kubeconfig).clusters[0]!.cluster!['server'],
+  );
   await Kubernetes.setup({
     kubeconfig: input.kubeconfig,
     fqdn: input.tls.fqdn,

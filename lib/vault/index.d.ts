@@ -32,7 +32,7 @@ export type VaultInput = {
     fqdn: string;
     isStaging: boolean;
   };
-  kubeconfig: string;
+  kubeconfig: pulumi.Output<string>;
 };
 export declare let networkInterface: NetworkInterface;
 export declare let virtualMachine: VirtualMachine;
