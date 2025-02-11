@@ -76,6 +76,23 @@ export function createCloudInitCustomData(
         #!/bin/bash
         systemctl stop vault.service
     - owner: "root:root"
+      path: /opt/vault/aks_ca.pem
+      content: ${input.kubernetes.caCert}
+      permissions: '0770'
+      defer: true
+      encoding: b64
+    - owner: "root:root"
+      path: /opt/vault/initialise_aks.sh
+      permissions: '0770'
+      defer: true
+      content: |
+        #!/bin/bash
+        export VAULT_TOKEN=$(cat /tmp/vault-init.json | jq -r '.root_token')
+        export VAULT_ADDR="https://${input.tls.hostname}:8200"
+        export VAULT_SKIP_VERIFY=${input.tls.staging ? 'true' : 'false'}
+        vault secrets enable kubernetes
+        vault write -f kubernetes/config service_account_jwt="${input.kubernetes.token}" kubernetes_host="${input.kubernetes.server}" kubernetes_ca_cert=@/opt/vault/aks_ca.pem
+    - owner: "root:root"
       path: /opt/vault/initialise_vault.sh
       permissions: '0770'
       defer: true
@@ -89,11 +106,7 @@ export function createCloudInitCustomData(
         cat /tmp/vault-init.json | jq -r '.root_token | "az keyvault secret set --name root-token --vault-name ${input.keyVault.name} --value \\(.)"' | xargs -n 1 -I {} bash -c "{}"
         systemctl stop vault.service
         systemctl start vault.service
-        export VAULT_TOKEN=$(cat /tmp/vault-init.json | jq -r '.root_token')
-        export VAULT_ADDR="https://${input.tls.hostname}:8200"
-        export VAULT_SKIP_VERIFY=${input.tls.staging ? 'true' : 'false'}
-        vault secrets enable kubernetes
-        vault write -f kubernetes/config service_account_jwt="${input.kubernetes.token}" kubernetes_host="${input.kubernetes.server}" kubernetes_ca_cert="${input.kubernetes.caCert}"
+        
     - owner: "root:root"
       path: /etc/letsencrypt/renewal-hooks/post/vault.sh
       content: |
@@ -139,6 +152,7 @@ export function createCloudInitCustomData(
     - chown -R vault:vault /opt/vault/tls
     - systemctl start vault.service
     - ./opt/vault/initialise_vault.sh
+    - ./opt/vault/initialise_aks.sh
   `;
   return configuration.apply((cloudInit) =>
     Buffer.from(cloudInit).toString('base64'),

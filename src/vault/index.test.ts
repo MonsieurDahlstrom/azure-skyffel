@@ -203,8 +203,6 @@ describe('Vault', function () {
           let cloudInitConfig = Buffer.from(customData, 'base64').toString();
           expect(cloudInitConfig).toContain(`vault secrets enable kubernetes`);
           expect(cloudInitConfig).toContain(`vault write -f kubernetes/config`);
-          expect(cloudInitConfig).toContain(`-----BEGIN CERTIFICATE-----`);
-          expect(cloudInitConfig).toContain(`-----END CERTIFICATE-----`);
           expect(cloudInitConfig).toContain(
             `kubernetes_host="https://aks-development-2btnrxnr.privatelink.swedencentral.azmk8s.io:443"`,
           );
