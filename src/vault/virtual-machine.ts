@@ -29,9 +29,11 @@ export async function createVirtualMachine(
   [azure_native.compute.VirtualMachine, azure_native.network.NetworkInterface]
 > {
   // Install kubernetes helm chart, service account token and cluster role
-  const clusterCaCert = input.kubeconfig.apply(
-    (kubeconfig): string =>
+  const clusterCaCert = input.kubeconfig.apply((kubeconfig): string =>
+    Buffer.from(
       parseYaml(kubeconfig).clusters[0]!.cluster!['certificate-authority-data'],
+      'base64',
+    ).toString(),
   );
   const clusterServer = input.kubeconfig.apply(
     (kubeconfig): string =>
