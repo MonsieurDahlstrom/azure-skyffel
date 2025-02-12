@@ -71,13 +71,10 @@ describe('SplitHorizonPrivateDNS', function () {
       });
       zones = new Map<string, pulumi.Output<string>>();
       zones.set('aks', pulumi.output('privatelink.northeurope.azmk8s.io'));
+      NetworkCore.setupNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
       input = {
         resourceGroup,
-        network: NetworkCore.createNetwork(
-          resourceGroup,
-          'vnet-test',
-          '10.0.0.0/20',
-        ),
+        network: NetworkCore.virtualNetwork,
         zones,
         dnsZoneContributors: [],
         subscriptionId: '',
@@ -110,13 +107,10 @@ describe('SplitHorizonPrivateDNS', function () {
       });
       zones = new Map<string, pulumi.Output<string>>();
       zones.set('aks', pulumi.output('privatelink.northeurope.azmk8s.io'));
+      NetworkCore.setupNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
       input = {
         resourceGroup,
-        network: NetworkCore.createNetwork(
-          resourceGroup,
-          'vnet-test',
-          '10.0.0.0/20',
-        ),
+        network: NetworkCore.virtualNetwork,
         zones,
         dnsZoneContributors: [],
         subscriptionId: '',

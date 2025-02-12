@@ -2,13 +2,16 @@ import * as ipaddress from 'ip-address';
 import { BigInteger } from 'jsbn';
 import * as azure from '@pulumi/azure-native';
 
-export function createNetwork(
+export let virtualNetwork: azure.network.VirtualNetwork;
+export let subnets: Map<string, azure.network.Subnet> = new Map();
+
+export function setupNetwork(
   resourceGroup: azure.resources.ResourceGroup,
   name: string,
   cidr: string,
   dnsServers?: string[],
-): azure.network.VirtualNetwork {
-  const vnet = new azure.network.VirtualNetwork(name, {
+) {
+  virtualNetwork = new azure.network.VirtualNetwork(name, {
     resourceGroupName: resourceGroup.name,
     addressSpace: {
       addressPrefixes: [cidr],
@@ -17,7 +20,6 @@ export function createNetwork(
       dnsServers: dnsServers,
     },
   });
-  return vnet;
 }
 
 export enum MDSubbnetDelegation {
@@ -28,10 +30,7 @@ export enum MDSubbnetDelegation {
 export interface MDSubnetArgs extends azure.network.SubnetArgs {
   delegationType?: MDSubbnetDelegation;
 }
-export function createSubnets(
-  snets: Map<string, MDSubnetArgs>,
-): Map<string, azure.network.Subnet> {
-  const subnets = new Map<string, azure.network.Subnet>();
+export function setupSubnets(snets: Map<string, MDSubnetArgs>) {
   for (const [key, value] of snets) {
     switch (value.delegationType) {
       case MDSubbnetDelegation.GithubRunner:
@@ -58,7 +57,6 @@ export function createSubnets(
     const subnet = new azure.network.Subnet(key, value);
     subnets.set(key, subnet);
   }
-  return subnets;
 }
 
 // Takes an IP address range in CIDR notation (like 10.0.0.0/8) and extends its prefix to include an additional subnet number.

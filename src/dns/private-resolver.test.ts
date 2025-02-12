@@ -45,33 +45,27 @@ describe('SplitHorizonResolver', function () {
 
   describe('#setup', function () {
     let resourceGroup: azure_native.resources.ResourceGroup;
-    let network: azure_native.network.VirtualNetwork;
     let subnet: azure_native.network.Subnet;
     let input: any;
-    let subnets: Map<string, azure_native.network.SubnetArgs>;
     let snets: Map<string, azure_native.network.SubnetArgs>;
     beforeEach(async function () {
       resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
         resourceGroupName: 'rg-test',
       });
-      network = NetworkCore.createNetwork(
-        resourceGroup,
-        'vnet-test',
-        '10.0.0.0/20',
-      );
+      NetworkCore.setupNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
       snets = new Map<string, SubnetArgs>();
       snets.set('dmz', {
         resourceGroupName: resourceGroup.name,
-        virtualNetworkName: network.name,
+        virtualNetworkName: NetworkCore.virtualNetwork.name,
         addressPrefix: '10.0.0.0/24',
       });
-      subnets = NetworkCore.createSubnets(snets);
+      NetworkCore.setupSubnets(snets);
       input = {
         resourceGroup,
-        network,
+        network: NetworkCore.virtualNetwork,
         subnet,
       };
-      subnet = subnets.get('dmz');
+      subnet = NetworkCore.subnets.get('dmz');
     });
     test('is defined', () => {
       expect(SplitHorizonResolver.setup).toBeTypeOf('function');

@@ -76,7 +76,6 @@ describe('Vault', function () {
       });
     });
     describe('post #setup', function () {
-      let network: azure_native.network.Network;
       let subnetVault, subnetKV: azure_native.network.Subnet;
       let resourceGroup: azure_native.resources.ResourceGroup;
       let username: pulumi.Output<string>;
@@ -98,25 +97,21 @@ describe('Vault', function () {
           privateZoneName: 'monsieurdahlstrom.dev',
           resourceGroupName: resourceGroup.name,
         });
-        network = NetworkCore.createNetwork(
-          resourceGroup,
-          'vnet-test',
-          '10.0.0.0/20',
-        );
+        NetworkCore.setupNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
         const snets = new Map<string, NetworkCore.MDSubnetArgs>();
         snets.set('subnet1', {
           addressPrefix: '10.0.0.0/25',
-          virtualNetworkName: network.name,
+          virtualNetworkName: NetworkCore.virtualNetwork.name,
           resourceGroupName: resourceGroup.name,
         });
         snets.set('subnet2', {
           addressPrefix: '10.0.0.1/25',
-          virtualNetworkName: network.name,
+          virtualNetworkName: NetworkCore.virtualNetwork.name,
           resourceGroupName: resourceGroup.name,
         });
-        const subnets = NetworkCore.createSubnets(snets);
-        subnetVault = subnets.get('subnet1');
-        subnetKV = subnets.get('subnet2');
+        NetworkCore.setupSubnets(snets);
+        subnetVault = NetworkCore.subnets.get('subnet1');
+        subnetKV = NetworkCore.subnets.get('subnet2');
         admin = { principalId: uuidv4(), type: 'Group' };
         subscriptionId = uuidv4();
         tenantId = uuidv4();

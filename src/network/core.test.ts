@@ -49,9 +49,8 @@ describe('cidrSubnet', () => {
   });
 });
 
-describe('createSubnets', () => {
+describe('setupSubnets', () => {
   let NetworkCore: typeof import('./core');
-  let vnet: azure_native.network.VirtualNetwork;
   let resourceGroup: azure_native.resources.ResourceGroup;
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
@@ -59,35 +58,35 @@ describe('createSubnets', () => {
     resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
       resourceGroupName: 'rg-test',
     });
-    vnet = NetworkCore.createNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
+    NetworkCore.setupNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
   });
-  test('createSubnets expected to be defined', () => {
-    expect(NetworkCore.createSubnets).toBeTypeOf('function');
+  test('setupSubnets expected to be defined', () => {
+    expect(NetworkCore.setupSubnets).toBeTypeOf('function');
   });
-  test('createSubnets creates snet without delegations', () => {
+  test('setupSubnets creates snet without delegations', () => {
     const snets = new Map<string, NetworkCore.MDSubnetArgs>();
     snets.set('subnet1', {
       addressPrefix: '10.0.0.0/25',
-      virtualNetworkName: vnet.name,
+      virtualNetworkName: NetworkCore.virtualNetwork.name,
       resourceGroupName: resourceGroup.name,
     });
-    const subnets = NetworkCore.createSubnets(snets);
-    expect(subnets.size).toBe(1);
-    subnets.get('subnet1').delegations.apply((delegations) => {
+    NetworkCore.setupSubnets(snets);
+    expect(NetworkCore.subnets.size).toBe(1);
+    NetworkCore.subnets.get('subnet1').delegations.apply((delegations) => {
       expect(delegations).toBeUndefined();
     });
   });
-  test('createSubnets creates snet with delegations', () => {
+  test('setupSubnets creates snet with delegations', () => {
     const snets = new Map<string, NetworkCore.MDSubnetArgs>();
     snets.set('subnet1', {
       addressPrefix: '10.0.0.0/25',
-      virtualNetworkName: vnet.name,
+      virtualNetworkName: NetworkCore.virtualNetwork.name,
       resourceGroupName: resourceGroup.name,
       delegationType: NetworkCore.MDSubbnetDelegation.GithubRunner,
     });
-    const subnets = NetworkCore.createSubnets(snets);
-    expect(subnets.size).toBe(1);
-    subnets.get('subnet1').delegations.apply((delegations) => {
+    NetworkCore.setupSubnets(snets);
+    expect(NetworkCore.subnets.size).toBe(1);
+    NetworkCore.subnets.get('subnet1').delegations.apply((delegations) => {
       expect(delegations.length).toBe(1);
     });
   });

@@ -1,10 +1,12 @@
 import * as azure from '@pulumi/azure-native';
-export declare function createNetwork(
+export declare let virtualNetwork: azure.network.VirtualNetwork;
+export declare let subnets: Map<string, azure.network.Subnet>;
+export declare function setupNetwork(
   resourceGroup: azure.resources.ResourceGroup,
   name: string,
   cidr: string,
   dnsServers?: string[],
-): azure.network.VirtualNetwork;
+): void;
 export declare enum MDSubbnetDelegation {
   None = 0,
   GithubRunner = 1,
@@ -13,9 +15,7 @@ export declare enum MDSubbnetDelegation {
 export interface MDSubnetArgs extends azure.network.SubnetArgs {
   delegationType?: MDSubbnetDelegation;
 }
-export declare function createSubnets(
-  snets: Map<string, MDSubnetArgs>,
-): Map<string, azure.network.Subnet>;
+export declare function setupSubnets(snets: Map<string, MDSubnetArgs>): void;
 export declare function cidrSubnet(
   iprange: string,
   newbits: number,

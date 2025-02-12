@@ -89,15 +89,11 @@ describe('RBAC Roles Assignments', function () {
           resourceGroupName: 'rg-test',
         },
       );
-      const network = NetworkCore.createNetwork(
-        resourceGroup,
-        'vnet-test',
-        '10.0.0.0/20',
-      );
+      NetworkCore.setupNetwork(resourceGroup, 'vnet-test', '10.0.0.0/20');
       const roleAssignment = AzureRoles.assignRole({
         principal: { id: 'principal-id', type: 'principal-type' },
         rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-        scope: network.id,
+        scope: NetworkCore.virtualNetwork.id,
         key: 'kubernetes',
         subscriptionId: 'subscription-id',
       });
@@ -107,7 +103,7 @@ describe('RBAC Roles Assignments', function () {
           roleAssignment.principalType,
           roleAssignment.roleDefinitionId,
           roleAssignment.scope,
-          network.id,
+          NetworkCore.virtualNetwork.id,
         ])
         .apply(
           ([
