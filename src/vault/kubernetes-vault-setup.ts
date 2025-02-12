@@ -84,6 +84,9 @@ export async function setup(
   const clusterrolebinding = new kubernetes.rbac.v1.ClusterRoleBinding(
     'vault',
     {
+      metadata: {
+        name: 'vault-token-creator-binding',
+      },
       roleRef: {
         apiGroup: 'rbac.authorization.k8s.io',
         kind: 'ClusterRole',

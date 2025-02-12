@@ -46,7 +46,7 @@ export async function createKeyVault(
         keyOps: ['wrapKey', 'unwrapKey'],
       },
     },
-    { dependsOn: [...KVTuple[1], KVTuple[0]] },
+    { dependsOn: [...KVTuple[1], input.dnsZone] },
   );
   return KVTuple;
 }
