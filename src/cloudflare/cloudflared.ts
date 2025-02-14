@@ -34,7 +34,8 @@ export type CloudflaredInput = {
     account: string;
     zone?: string;
   };
-  subnet: Subnet;
+  subnet?: Subnet;
+  subnetId?: string;
   resourceGroup: ResourceGroup;
   vmSize: string;
 };
@@ -57,11 +58,9 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
     tunnelId: vnetTunnel.id,
     comment: `route to ${input.routeCidr}`,
   });
-  const addressPrefix = await GetValue(
-    input.subnet.addressPrefix.apply((prefix) => prefix),
-  );
-  if (!addressPrefix) throw new Error('Subnet address prefix not found');
   //create nic
+  let networkInterfaceDependencies: pulumi.Resource[] = [];
+  if (input.subnet) networkInterfaceDependencies.push(input.subnet);
   networkInterface = new NetworkInterface(
     'cloudflare-connector-nic',
     {
@@ -72,17 +71,22 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
         {
           name: 'internal',
           subnet: {
-            id: input.subnet.id,
+            id: input.subnetId ? input.subnetId : input.subnet?.id,
           },
           privateIPAllocationMethod: 'Dynamic',
         },
       ],
     },
     {
-      dependsOn: [input.subnet],
+      dependsOn: networkInterfaceDependencies,
     },
   );
   //create vm
+  let virtualMachineDependencies: pulumi.Resource[] = [
+    networkInterface,
+    vnetTunnel,
+  ];
+  if (input.subnet) virtualMachineDependencies.push(input.subnet);
   virtualMachine = new VirtualMachine(
     'cloudflare-connector-vm',
     {
@@ -141,7 +145,7 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
       },
     },
     {
-      dependsOn: [networkInterface, vnetTunnel, input.subnet],
+      dependsOn: virtualMachineDependencies,
     },
   );
   return true;

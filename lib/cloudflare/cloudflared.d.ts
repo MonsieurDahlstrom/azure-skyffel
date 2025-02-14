@@ -14,7 +14,8 @@ export type CloudflaredInput = {
     account: string;
     zone?: string;
   };
-  subnet: Subnet;
+  subnet?: Subnet;
+  subnetId?: string;
   resourceGroup: ResourceGroup;
   vmSize: string;
 };
