@@ -4,8 +4,10 @@ import * as AzureRoles from '../rbac/roles';
 export type createKeyVaultInput = {
   name: string;
   resourceGroup: azure_native.resources.ResourceGroup;
-  subnet: azure_native.network.Subnet;
-  dnsZone: azure_native.network.PrivateZone;
+  subnet?: azure_native.network.Subnet;
+  subnetId?: string;
+  dnsZone?: azure_native.network.PrivateZone;
+  dnsZoneId?: string;
   readers?: AzureRoles.RbacAssignee[];
   officers?: AzureRoles.RbacAssignee[];
   dataAccessManagers?: AzureRoles.RbacAssignee[];

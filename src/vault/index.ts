@@ -26,10 +26,10 @@ import { createKeyVault } from './key-vault';
 import { createVirtualMachine } from './virtual-machine';
 
 export type VaultInput = {
-  subnet: Subnet;
+  subnetId: string;
   keyVault: {
-    subnet: Subnet;
-    dnsZone: PrivateZone;
+    subnetId: string;
+    dnsZoneId: string;
     readers?: AzureRoles.RbacAssignee[];
     officers?: AzureRoles.RbacAssignee[];
     dataAccessManagers?: AzureRoles.RbacAssignee[];
@@ -63,7 +63,7 @@ export async function setup(input: VaultInput): Promise<boolean> {
   //create a random azure key vault name suffix
   const createKeyvaultTuple = await createKeyVault({
     ...input.keyVault,
-    subnet: input.subnet,
+    subnetId: input.subnetId,
     tenantId: input.tenantId,
     subscriptionId: input.subscriptionId,
     resourceGroup: input.resourceGroup,

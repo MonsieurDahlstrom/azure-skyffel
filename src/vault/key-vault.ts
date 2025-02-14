@@ -9,8 +9,8 @@ type SetupKeyVault = {
   resourceGroup: azure_native.resources.ResourceGroup;
   tenantId: string;
   subscriptionId: string;
-  subnet: azure_native.network.Subnet;
-  dnsZone: azure_native.network.PrivateZone;
+  subnetId: string;
+  dnsZoneId: string;
   readers?: AzureRoles.RbacAssignee[];
   officers?: AzureRoles.RbacAssignee[];
   dataAccessManagers?: AzureRoles.RbacAssignee[];
@@ -26,8 +26,8 @@ export async function createKeyVault(
   const KVTuple = await KeyVault.create({
     name: 'vault',
     resourceGroup: input.resourceGroup,
-    subnet: input.subnet,
-    dnsZone: input.dnsZone,
+    subnetId: input.subnetId,
+    dnsZoneId: input.dnsZoneId,
     tenantId: input.tenantId,
     subscriptionId: input.subscriptionId,
     readers: input.readers,
@@ -46,7 +46,7 @@ export async function createKeyVault(
         keyOps: ['wrapKey', 'unwrapKey'],
       },
     },
-    { dependsOn: [...KVTuple[1], input.dnsZone] },
+    { dependsOn: [...KVTuple[1]] },
   );
   return KVTuple;
 }

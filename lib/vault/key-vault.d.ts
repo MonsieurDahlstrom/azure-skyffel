@@ -6,8 +6,8 @@ type SetupKeyVault = {
   resourceGroup: azure_native.resources.ResourceGroup;
   tenantId: string;
   subscriptionId: string;
-  subnet: azure_native.network.Subnet;
-  dnsZone: azure_native.network.PrivateZone;
+  subnetId: string;
+  dnsZoneId: string;
   readers?: AzureRoles.RbacAssignee[];
   officers?: AzureRoles.RbacAssignee[];
   dataAccessManagers?: AzureRoles.RbacAssignee[];

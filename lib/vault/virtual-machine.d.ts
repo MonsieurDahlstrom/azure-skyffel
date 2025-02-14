@@ -3,7 +3,7 @@ import * as azure_native from '@pulumi/azure-native';
 type CreateVirtualMachine = {
   keyVault: azure_native.keyvault.Vault;
   resourceGroup: azure_native.resources.ResourceGroup;
-  subnet: azure_native.network.Subnet;
+  subnetId: string;
   tenantId: string;
   tls: {
     cloudflareApiToken: string;
