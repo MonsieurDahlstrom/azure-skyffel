@@ -101,7 +101,7 @@ export async function create(
   }
   if (input.dataAccessManagers) {
     for (let manager of input.dataAccessManagers) {
-      const managerAssignment = await AzureRoles.assignRole({
+      const managerAssignment = await AzureRoles.assignRoleOutput({
         principal: manager,
         rbacRole: AzureRoles.RoleUUID.KeyVaultDataAccessAdministrator,
         scope: keyVault.id,

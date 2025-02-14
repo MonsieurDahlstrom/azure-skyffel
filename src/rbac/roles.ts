@@ -19,39 +19,53 @@ export type RbacAssignee = {
   type: string;
 };
 
-type MDRoleAssignment = {
+export function assignRole(input: {
+  principal: RbacAssignee;
+  rbacRole: string;
+  scope: string;
+  key: string;
+  subscriptionId: string;
+}): azure_native.authorization.RoleAssignment {
+  const roleGUID = new random.RandomUuid(
+    `${input.principal.type}-${input.principal.id}-assigned-role-${input.rbacRole}-for-${input.key}`,
+    {},
+  );
+  return new azure_native.authorization.RoleAssignment(
+    `role-${input.rbacRole}-assiged-to-${input.principal.id}-for-${input.scope}`,
+    {
+      principalId: input.principal.id,
+      principalType: input.principal.type,
+      roleAssignmentName: roleGUID.result,
+      roleDefinitionId: `/subscriptions/${input.subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${input.rbacRole}`,
+      scope: input.scope,
+    },
+  );
+}
+
+export function assignRoleOutput(input: {
   principal: RbacAssignee;
   rbacRole: string;
   scope: pulumi.Output<string>;
   key: string;
   subscriptionId: string;
-};
-
-export function assignRole(
-  input: MDRoleAssignment,
-): pulumi.Output<azure_native.authorization.RoleAssignment> {
-  const roleAssingment = input.scope.apply((scope) => {
+}): pulumi.Output<azure_native.authorization.RoleAssignment> {
+  return input.scope.apply((scope) => {
     const roleGUID = new random.RandomUuid(
       `${input.principal.type}-${input.principal.id}-assigned-role-${input.rbacRole}-for-${input.key}`,
       {},
     );
-    const role = input.scope.apply((scope) => {
-      return new azure_native.authorization.RoleAssignment(
-        `role-${input.rbacRole}-assiged-to-${input.principal.id}-for-${scope}`,
-        {
-          principalId: input.principal.id,
-          principalType: input.principal.type,
-          roleAssignmentName: roleGUID.result,
-          roleDefinitionId: `/subscriptions/${input.subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${input.rbacRole}`,
-          scope: scope,
-        },
-      );
-    });
-    return role;
+    return new azure_native.authorization.RoleAssignment(
+      `role-${input.rbacRole}-assiged-to-${input.principal.id}-for-${scope}`,
+      {
+        principalId: input.principal.id,
+        principalType: input.principal.type,
+        roleAssignmentName: roleGUID.result,
+        roleDefinitionId: `/subscriptions/${input.subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${input.rbacRole}`,
+        scope: scope,
+      },
+    );
   });
-  return roleAssingment;
 }
-
 export function assignKeyVaultOfficers(input: {
   principal: RbacAssignee;
   keyVault: azure_native.keyvault.Vault;
@@ -60,7 +74,7 @@ export function assignKeyVaultOfficers(input: {
 }): pulumi.Output<azure_native.authorization.RoleAssignment>[] {
   let assignments: pulumi.Output<azure_native.authorization.RoleAssignment>[] =
     [];
-  let contributeSecretsRole = assignRole({
+  let contributeSecretsRole = assignRoleOutput({
     principal: input.principal,
     rbacRole: RoleUUID.KeyVaultSecretOfficer,
     scope: input.keyVault.id,
@@ -68,7 +82,7 @@ export function assignKeyVaultOfficers(input: {
     subscriptionId: input.subscriptionId,
   });
   assignments.push(contributeSecretsRole);
-  let contributeCertificatesRole = assignRole({
+  let contributeCertificatesRole = assignRoleOutput({
     principal: input.principal,
     rbacRole: RoleUUID.KeyVaultCertificateOfficer,
     scope: input.keyVault.id,
@@ -76,7 +90,7 @@ export function assignKeyVaultOfficers(input: {
     subscriptionId: input.subscriptionId,
   });
   assignments.push(contributeCertificatesRole);
-  let contributeCryptoRole = assignRole({
+  let contributeCryptoRole = assignRoleOutput({
     principal: input.principal,
     rbacRole: RoleUUID.KeyVaultCryptoOfficer,
     scope: input.keyVault.id,
@@ -95,7 +109,7 @@ export function assignKeyVaultUsers(input: {
 }): pulumi.Output<azure_native.authorization.RoleAssignment>[] {
   let assignments: pulumi.Output<azure_native.authorization.RoleAssignment>[] =
     [];
-  let contributeSecretsRole = assignRole({
+  let contributeSecretsRole = assignRoleOutput({
     principal: input.principal,
     rbacRole: RoleUUID.KeyVaultSecretUser,
     scope: input.keyVault.id,
@@ -103,7 +117,7 @@ export function assignKeyVaultUsers(input: {
     subscriptionId: input.subscriptionId,
   });
   assignments.push(contributeSecretsRole);
-  let contributeCertificatesRole = assignRole({
+  let contributeCertificatesRole = assignRoleOutput({
     principal: input.principal,
     rbacRole: RoleUUID.KeyVaultCertificateUser,
     scope: input.keyVault.id,
@@ -111,7 +125,7 @@ export function assignKeyVaultUsers(input: {
     subscriptionId: input.subscriptionId,
   });
   assignments.push(contributeCertificatesRole);
-  let contributeCryptoRole = assignRole({
+  let contributeCryptoRole = assignRoleOutput({
     principal: input.principal,
     rbacRole: RoleUUID.KeyVaultCryptoUser,
     scope: input.keyVault.id,

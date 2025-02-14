@@ -67,7 +67,7 @@ async function createPrivateDnsZone(
   zones.set(input.key, privateDnsZone);
   if (input.dnsZoneContributors.length > 0) {
     input.dnsZoneContributors.forEach(async (contributor) => {
-      AzureRoles.assignRole({
+      AzureRoles.assignRoleOutput({
         principal: contributor,
         rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
         scope: privateDnsZone.id,

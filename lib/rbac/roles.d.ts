@@ -15,16 +15,20 @@ export type RbacAssignee = {
   id: string;
   type: string;
 };
-type MDRoleAssignment = {
+export declare function assignRole(input: {
+  principal: RbacAssignee;
+  rbacRole: string;
+  scope: string;
+  key: string;
+  subscriptionId: string;
+}): azure_native.authorization.RoleAssignment;
+export declare function assignRoleOutput(input: {
   principal: RbacAssignee;
   rbacRole: string;
   scope: pulumi.Output<string>;
   key: string;
   subscriptionId: string;
-};
-export declare function assignRole(
-  input: MDRoleAssignment,
-): pulumi.Output<azure_native.authorization.RoleAssignment>;
+}): pulumi.Output<azure_native.authorization.RoleAssignment>;
 export declare function assignKeyVaultOfficers(input: {
   principal: RbacAssignee;
   keyVault: azure_native.keyvault.Vault;
@@ -37,5 +41,4 @@ export declare function assignKeyVaultUsers(input: {
   subscriptionId: string;
   name: string;
 }): pulumi.Output<azure_native.authorization.RoleAssignment>[];
-export {};
 //# sourceMappingURL=roles.d.ts.map

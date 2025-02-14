@@ -24,8 +24,8 @@ import { parse } from 'yaml';
 export type AksInput = {
   name: string;
   resourceGroup: ResourceGroup;
-  network: VirtualNetwork;
-  nodes: Subnet;
+  networkId: string;
+  nodesId: string;
   defaultNode: {
     min: number;
     max: number;
@@ -34,7 +34,7 @@ export type AksInput = {
     diskSize: number;
     osDiskType: OSDiskType;
   };
-  privateDnsZone: PrivateZone;
+  privateDnsZoneId: string;
   subscriptionId: string;
   // TODO: tags commonTags?: { [key: string]: string };
 };
@@ -49,41 +49,35 @@ export async function setup(input: AksInput): Promise<boolean> {
     resourceGroupName: input.resourceGroup.name,
   });
   const neededRoles = pulumi
-    .all([
-      clusterIdentity.principalId,
-      input.privateDnsZone.id,
-      input.network.id,
-    ])
-    .apply(
-      ([principalId, dnsZoneId, vnetId]): pulumi.Output<RoleAssignment>[] => {
-        let roles: pulumi.Output<RoleAssignment>[] = [];
-        roles.push(
-          AzureRoles.assignRole({
-            principal: {
-              id: principalId,
-              type: 'ServicePrincipal',
-            },
-            rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-            scope: input.privateDnsZone.id,
-            key: 'kubernetes',
-            subscriptionId: input.subscriptionId,
-          }),
-        );
-        roles.push(
-          AzureRoles.assignRole({
-            principal: {
-              id: principalId,
-              type: 'ServicePrincipal',
-            },
-            rbacRole: AzureRoles.RoleUUID.NetworkContributor,
-            scope: input.network.id,
-            key: 'kubernetes',
-            subscriptionId: input.subscriptionId,
-          }),
-        );
-        return roles;
-      },
-    );
+    .all([clusterIdentity.principalId])
+    .apply(([principalId]): RoleAssignment[] => {
+      let roles: RoleAssignment[] = [];
+      roles.push(
+        AzureRoles.assignRole({
+          principal: {
+            id: principalId!,
+            type: 'ServicePrincipal',
+          },
+          rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
+          scope: input.privateDnsZoneId,
+          key: 'kubernetes',
+          subscriptionId: input.subscriptionId,
+        }),
+      );
+      roles.push(
+        AzureRoles.assignRole({
+          principal: {
+            id: principalId!,
+            type: 'ServicePrincipal',
+          },
+          rbacRole: AzureRoles.RoleUUID.NetworkContributor,
+          scope: input.networkId,
+          key: 'kubernetes',
+          subscriptionId: input.subscriptionId,
+        }),
+      );
+      return roles;
+    });
   // Create the AKS cluster
   cluster = new ManagedCluster(
     input.name,
@@ -113,7 +107,7 @@ export async function setup(input: AksInput): Promise<boolean> {
           osType: 'Linux',
           type: 'VirtualMachineScaleSets',
           vmSize: input.defaultNode.vmSize,
-          vnetSubnetID: input.nodes.id,
+          vnetSubnetID: input.nodesId,
           availabilityZones: input.defaultNode.zones,
         },
       ],
@@ -121,7 +115,7 @@ export async function setup(input: AksInput): Promise<boolean> {
         enablePrivateCluster: true,
         enablePrivateClusterPublicFQDN: false,
         disableRunCommand: false,
-        privateDNSZone: input.privateDnsZone.id,
+        privateDNSZone: input.privateDnsZoneId,
       },
       autoScalerProfile: {
         scaleDownDelayAfterAdd: '15m',
