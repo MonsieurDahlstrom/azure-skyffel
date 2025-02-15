@@ -8,9 +8,10 @@ type PrivateDnsZoneContributorIdentity = {
 type SetupInput = {
   resourceGroup: azure_native.resources.ResourceGroup;
   network: azure_native.network.VirtualNetwork;
-  zones: Map<string, pulumi.Output<string>>;
-  dnsZoneContributors: PrivateDnsZoneContributorIdentity[];
-  subscriptionId: string;
+  dnsZoneContributors?: PrivateDnsZoneContributorIdentity[];
+  subscriptionId?: string;
+  stack?: pulumi.StackReference;
+  zones?: Map<string, pulumi.Output<string>>;
 };
 export declare function setup(input: SetupInput): Promise<boolean>;
 export declare function createAddressEntry(input: {

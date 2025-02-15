@@ -12,21 +12,46 @@ type PrivateDnsZoneContributorIdentity = {
 type SetupInput = {
   resourceGroup: azure_native.resources.ResourceGroup;
   network: azure_native.network.VirtualNetwork;
-  zones: Map<string, pulumi.Output<string>>;
-  dnsZoneContributors: PrivateDnsZoneContributorIdentity[];
-  subscriptionId: string;
+  dnsZoneContributors?: PrivateDnsZoneContributorIdentity[];
+  subscriptionId?: string;
+  stack?: pulumi.StackReference;
+  zones?: Map<string, pulumi.Output<string>>;
 };
 export async function setup(input: SetupInput): Promise<boolean> {
-  input.zones.forEach(async (zone, key) => {
+  if (input.stack === undefined) {
+    await setupAsHub(input);
+  } else {
+    await setupAsSpoke(input);
+  }
+  return true;
+}
+
+async function setupAsHub(input: SetupInput): Promise<boolean> {
+  input.zones!.forEach(async (zone, key) => {
     await createPrivateDnsZone({
       key,
       zone,
       resourceGroup: input.resourceGroup,
       network: input.network,
-      dnsZoneContributors: input.dnsZoneContributors,
-      subscriptionId: input.subscriptionId,
+      dnsZoneContributors: input.dnsZoneContributors!,
+      subscriptionId: input.subscriptionId!,
     });
   });
+  return true;
+}
+
+async function setupAsSpoke(input: SetupInput): Promise<boolean> {
+  const dnsResourceGroupName =
+    await input.stack!.getOutputValue('resourceGroupName');
+  const zones: string[] = await input.stack!.getOutputValue('dnsZones');
+  for (const zone in zones) {
+    await linkPrivateDnsZone({
+      key: zone.replace('.', '-'),
+      dnsZoneName: zone,
+      resourceGroupName: dnsResourceGroupName,
+      networkId: input.network.id,
+    });
+  }
   return true;
 }
 
@@ -77,6 +102,27 @@ async function createPrivateDnsZone(
     });
   }
   return true;
+}
+
+async function linkPrivateDnsZone(input: {
+  key: string;
+  dnsZoneName: string;
+  resourceGroupName: string;
+  networkId: pulumi.Output<string>;
+}) {
+  const link = new azure_native.network.VirtualNetworkLink(
+    `vnet-link-${input.key}`,
+    {
+      location: 'Global',
+      privateZoneName: input.dnsZoneName,
+      registrationEnabled: false,
+      resourceGroupName: input.resourceGroupName,
+      virtualNetwork: {
+        id: input.networkId,
+      },
+      virtualNetworkLinkName: `vnet-link-${input.key}`,
+    },
+  );
 }
 
 export async function createAddressEntry(input: {
