@@ -50,13 +50,14 @@ async function setupAsSpoke(input: {
   const provider = new azure_native.Provider('provider', {
     subscriptionId: await input.stack!.getOutputValue('subscriptionId'),
   });
+  const networkName = await GetValue(input.network.name);
   const zonesData: {
     resourceGroupName: string;
     name: string;
   }[] = await input.stack!.getOutputValue('dnsZones');
   zonesData.forEach(async (zone) => {
     await linkPrivateDnsZone({
-      key: zone.name.replace('.', '-'),
+      key: `${networkName}-${zone.name.replace('.', '-')}`,
       dnsZoneName: zone.name,
       resourceGroupName: zone.resourceGroupName,
       networkId: input.network.id,
@@ -165,4 +166,12 @@ export async function createAddressEntry(input: {
       );
     });
   return true;
+}
+
+function GetValue<T>(output: pulumi.Output<T>) {
+  return new Promise<T>((resolve, reject) => {
+    output.apply((value) => {
+      resolve(value);
+    });
+  });
 }
