@@ -21,7 +21,10 @@ export async function setup(input: SetupInput): Promise<boolean> {
   if (input.stack === undefined) {
     await setupAsHub(input);
   } else {
-    await setupAsSpoke(input);
+    await setupAsSpoke({
+      stack: input.stack,
+      network: input.network,
+    });
   }
   return true;
 }
@@ -40,18 +43,26 @@ async function setupAsHub(input: SetupInput): Promise<boolean> {
   return true;
 }
 
-async function setupAsSpoke(input: SetupInput): Promise<boolean> {
-  const dnsResourceGroupName =
-    await input.stack!.getOutputValue('resourceGroupName');
-  const zones: string[] = await input.stack!.getOutputValue('dnsZones');
-  for (const zone in zones) {
+async function setupAsSpoke(input: {
+  stack: pulumi.StackReference;
+  network: azure_native.network.VirtualNetwork;
+}): Promise<boolean> {
+  const provider = new azure_native.Provider('provider', {
+    subscriptionId: await input.stack!.getOutputValue('subscriptionId'),
+  });
+  const zonesData: {
+    resourceGroupName: string;
+    name: string;
+  }[] = await input.stack!.getOutputValue('dnsZones');
+  zonesData.forEach(async (zone) => {
     await linkPrivateDnsZone({
-      key: zone.replace('.', '-'),
-      dnsZoneName: zone,
-      resourceGroupName: dnsResourceGroupName,
+      key: zone.name.replace('.', '-'),
+      dnsZoneName: zone.name,
+      resourceGroupName: zone.resourceGroupName,
       networkId: input.network.id,
+      provider,
     });
-  }
+  });
   return true;
 }
 
@@ -109,6 +120,7 @@ async function linkPrivateDnsZone(input: {
   dnsZoneName: string;
   resourceGroupName: string;
   networkId: pulumi.Output<string>;
+  provider: azure_native.Provider;
 }) {
   const link = new azure_native.network.VirtualNetworkLink(
     `vnet-link-${input.key}`,
@@ -122,6 +134,7 @@ async function linkPrivateDnsZone(input: {
       },
       virtualNetworkLinkName: `vnet-link-${input.key}`,
     },
+    { provider: input.provider },
   );
 }
 
