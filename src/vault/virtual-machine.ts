@@ -149,6 +149,7 @@ export async function createVirtualMachine(
     {
       dependsOn: [networkInterface, input.keyVault],
       replaceOnChanges: ['osProfile'],
+      deleteBeforeReplace: true,
     },
   );
   return [virtualMachine, networkInterface];

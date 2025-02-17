@@ -143,6 +143,8 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
     },
     {
       dependsOn: virtualMachineDependencies,
+      replaceOnChanges: ['osProfile'],
+      deleteBeforeReplace: true,
     },
   );
   return true;
