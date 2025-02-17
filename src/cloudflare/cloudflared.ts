@@ -46,7 +46,7 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
   const tunnelSecretValue = await GetValue(tunnelSecret.base64);
   const vnetTunnel = new cloudflare.ZeroTrustTunnelCloudflared(`vnet-tunnel`, {
     accountId: input.cloudflare.account,
-    name: `Tunnel to ${input.routeCidr}`,
+    name: pulumi.interpolate`Tunnel to ${input.routeCidr}`,
     secret: tunnelSecretValue,
     configSrc: 'cloudflare',
   });

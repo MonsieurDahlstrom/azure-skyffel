@@ -18,79 +18,112 @@ export async function setup(
   const zonesData: { resourceGroupName: string; name: string }[] =
     await stack.getOutputValue('dnsZones');
   zonesData.forEach(async (zoneData) => {
-    if (typeof network.name === 'string') {
-      await linkPrivateDnsZone({
-        key: `${network.name}-${zoneData.name.replace('.', '-')}`,
-        dnsZoneName: zoneData.name,
-        resourceGroupName: zoneData.resourceGroupName,
-        networkId: network.id!,
-        provider,
-      });
-      zones.set(
-        zoneData.name,
-        await azure_native.network.getPrivateZone(
-          {
-            resourceGroupName: zoneData.resourceGroupName,
-            privateZoneName: zoneData.name,
-          },
-          { provider },
-        ),
-      );
-    } else {
-      network.name.apply(async (name) => {
-        await linkPrivateDnsZone({
-          key: `${name}-${zoneData.name.replace('.', '-')}`,
-          dnsZoneName: zoneData.name,
+    zones.set(
+      zoneData.name,
+      await azure_native.network.getPrivateZone(
+        {
           resourceGroupName: zoneData.resourceGroupName,
-          networkId: network.id!,
+          privateZoneName: zoneData.name,
+        },
+        {
           provider,
-        });
-        zones.set(
-          zoneData.name,
-          await azure_native.network.getPrivateZone(
-            {
-              resourceGroupName: zoneData.resourceGroupName,
-              privateZoneName: zoneData.name,
-            },
-            { provider },
-          ),
-        );
-      });
+        },
+      ),
+    );
+  });
+  const linkPromises = zonesData.map(async (zoneData) => {
+    const linkExists = await checkLink({ network, zoneData, provider });
+    if (!linkExists) {
+      return createLink({ network, zoneData, provider });
     }
   });
+  await Promise.all(linkPromises);
 }
 
-async function linkPrivateDnsZone(input: {
-  key: string;
-  dnsZoneName: string;
-  resourceGroupName: string;
-  networkId: string | pulumi.Output<string>;
+async function checkLink(input: {
+  network:
+    | azure_native.network.GetVirtualNetworkResult
+    | azure_native.network.VirtualNetwork;
+  zoneData: { resourceGroupName: string; name: string };
   provider: azure_native.Provider;
-}) {
-  await azure_native.network
-    .getVirtualNetworkLink(
-      {
-        privateZoneName: input.dnsZoneName,
-        resourceGroupName: input.resourceGroupName,
-        virtualNetworkLinkName: input.key,
-      },
-      { provider: input.provider },
-    )
-    .catch((error) => {
-      const link = new azure_native.network.VirtualNetworkLink(
-        input.key,
+}): Promise<boolean> {
+  if (typeof input.network.name === 'string') {
+    const key = `${input.network.name}-${input.zoneData.name.replace('.', '-')}`;
+    try {
+      const link = await azure_native.network.getVirtualNetworkLink(
         {
-          location: 'Global',
-          privateZoneName: input.dnsZoneName,
-          registrationEnabled: false,
-          resourceGroupName: input.resourceGroupName,
-          virtualNetwork: {
-            id: input.networkId,
-          },
-          virtualNetworkLinkName: `vnet-link-${input.key}`,
+          privateZoneName: input.zoneData.name,
+          resourceGroupName: input.zoneData.resourceGroupName,
+          virtualNetworkLinkName: key,
         },
         { provider: input.provider },
       );
-      return link;
+      return true;
+    } catch (error) {
+      return false;
+    }
+  } else {
+    return new Promise((resolve, reject) => {
+      (input.network.name as pulumi.Output<string>).apply(async (name) => {
+        const key = `${name}-${input.zoneData.name.replace('.', '-')}`;
+        try {
+          const link = await azure_native.network.getVirtualNetworkLink(
+            {
+              privateZoneName: input.zoneData.name,
+              resourceGroupName: input.zoneData.resourceGroupName,
+              virtualNetworkLinkName: key,
+            },
+            { provider: input.provider },
+          );
+          resolve(true);
+        } catch (error) {
+          resolve(false);
+        }
+      });
     });
+  }
+}
+
+async function createLink(input: {
+  network:
+    | azure_native.network.GetVirtualNetworkResult
+    | azure_native.network.VirtualNetwork;
+  zoneData: { resourceGroupName: string; name: string };
+  provider: azure_native.Provider;
+}) {
+  if (typeof input.network.name === 'string') {
+    const key = `${input.network.name}-${input.zoneData.name.replace('.', '-')}`;
+    const link = new azure_native.network.VirtualNetworkLink(
+      key,
+      {
+        location: 'Global',
+        privateZoneName: input.zoneData.name,
+        registrationEnabled: false,
+        resourceGroupName: input.zoneData.resourceGroupName,
+        virtualNetwork: {
+          id: input.network.id,
+        },
+        virtualNetworkLinkName: `vnet-link-${key}`,
+      },
+      { provider: input.provider },
+    );
+  } else {
+    input.network.name.apply(async (name) => {
+      const key = `${name}-${input.zoneData.name.replace('.', '-')}`;
+      const link = new azure_native.network.VirtualNetworkLink(
+        key,
+        {
+          location: 'Global',
+          privateZoneName: input.zoneData.name,
+          registrationEnabled: false,
+          resourceGroupName: input.zoneData.resourceGroupName,
+          virtualNetwork: {
+            id: input.network.id,
+          },
+          virtualNetworkLinkName: `vnet-link-${key}`,
+        },
+        { provider: input.provider },
+      );
+    });
+  }
 }
