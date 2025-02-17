@@ -18,23 +18,45 @@ export async function setup(
   const zonesData: { resourceGroupName: string; name: string }[] =
     await stack.getOutputValue('dnsZones');
   zonesData.forEach(async (zoneData) => {
-    await linkPrivateDnsZone({
-      key: `${network.name}-${zoneData.name.replace('.', '-')}`,
-      dnsZoneName: zoneData.name,
-      resourceGroupName: zoneData.resourceGroupName,
-      networkId: network.id!,
-      provider,
-    });
-    zones.set(
-      zoneData.name,
-      await azure_native.network.getPrivateZone(
-        {
+    if (typeof network.name === 'string') {
+      await linkPrivateDnsZone({
+        key: `${network.name}-${zoneData.name.replace('.', '-')}`,
+        dnsZoneName: zoneData.name,
+        resourceGroupName: zoneData.resourceGroupName,
+        networkId: network.id!,
+        provider,
+      });
+      zones.set(
+        zoneData.name,
+        await azure_native.network.getPrivateZone(
+          {
+            resourceGroupName: zoneData.resourceGroupName,
+            privateZoneName: zoneData.name,
+          },
+          { provider },
+        ),
+      );
+    } else {
+      network.name.apply(async (name) => {
+        await linkPrivateDnsZone({
+          key: `${name}-${zoneData.name.replace('.', '-')}`,
+          dnsZoneName: zoneData.name,
           resourceGroupName: zoneData.resourceGroupName,
-          privateZoneName: zoneData.name,
-        },
-        { provider },
-      ),
-    );
+          networkId: network.id!,
+          provider,
+        });
+        zones.set(
+          zoneData.name,
+          await azure_native.network.getPrivateZone(
+            {
+              resourceGroupName: zoneData.resourceGroupName,
+              privateZoneName: zoneData.name,
+            },
+            { provider },
+          ),
+        );
+      });
+    }
   });
 }
 
@@ -49,12 +71,12 @@ async function linkPrivateDnsZone(input: {
     .getVirtualNetworkLink({
       privateZoneName: input.dnsZoneName,
       resourceGroupName: input.resourceGroupName,
-      virtualNetworkLinkName: `vnet-link-${input.key}`,
+      virtualNetworkLinkName: input.key,
     })
     .catch((error) => {
       console.log(`getVirtualNetworkLink error: ${error}`);
       const link = new azure_native.network.VirtualNetworkLink(
-        `vnet-link-${input.key}`,
+        input.key,
         {
           location: 'Global',
           privateZoneName: input.dnsZoneName,
