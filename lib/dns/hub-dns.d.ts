@@ -21,4 +21,4 @@ export declare function createAddressEntry(input: {
   resourceGroup: azure_native.resources.ResourceGroup;
 }): Promise<boolean>;
 export {};
-//# sourceMappingURL=private-dns-zones.d.ts.map
+//# sourceMappingURL=hub-dns.d.ts.map

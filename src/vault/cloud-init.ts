@@ -264,11 +264,3 @@ function GetCloudInitCustomData(input: CloudConfigInput): string {
   `;
   return Buffer.from(cloudInitConfig).toString('base64');
 }
-
-function GetValue<T>(output: pulumi.Output<T>) {
-  return new Promise<T>((resolve, reject) => {
-    output.apply((value) => {
-      resolve(value);
-    });
-  });
-}

@@ -23,6 +23,7 @@ export declare function create(
   [
     azure_native.keyvault.Vault,
     pulumi.Output<azure_native.authorization.RoleAssignment>[],
+    azure_native.network.PrivateEndpoint,
   ]
 >;
 //# sourceMappingURL=azure-key-vault.d.ts.map

@@ -21,6 +21,7 @@ export async function createKeyVault(
   [
     azure_native.keyvault.Vault,
     pulumi.Output<azure_native.authorization.RoleAssignment>[],
+    azure_native.network.PrivateEndpoint,
   ]
 > {
   const KVTuple = await KeyVault.create({
@@ -46,7 +47,7 @@ export async function createKeyVault(
         keyOps: ['wrapKey', 'unwrapKey'],
       },
     },
-    { dependsOn: [...KVTuple[1]] },
+    { dependsOn: [...KVTuple[1], KVTuple[2]] },
   );
   return KVTuple;
 }

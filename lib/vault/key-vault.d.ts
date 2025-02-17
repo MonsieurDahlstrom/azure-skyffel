@@ -18,6 +18,7 @@ export declare function createKeyVault(
   [
     azure_native.keyvault.Vault,
     pulumi.Output<azure_native.authorization.RoleAssignment>[],
+    azure_native.network.PrivateEndpoint,
   ]
 >;
 export {};

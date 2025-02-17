@@ -43,12 +43,12 @@ pulumi.runtime.setMocks(
   false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
 );
 
-describe('SplitHorizonPrivateDNS', function () {
-  let SplitHorizonPrivateDNS: typeof import('./private-dns-zones');
+describe('HubDNS', function () {
+  let SplitHorizonPrivateDNS: typeof import('./hub-dns');
   let NetworkCore: typeof import('../network/core');
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
-    SplitHorizonPrivateDNS = await import('./private-dns-zones');
+    SplitHorizonPrivateDNS = await import('./hub-dns');
     NetworkCore = await import('../network/core');
   });
 

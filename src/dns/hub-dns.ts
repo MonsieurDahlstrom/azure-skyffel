@@ -18,18 +18,6 @@ type SetupInput = {
   zones?: Map<string, pulumi.Output<string>>;
 };
 export async function setup(input: SetupInput): Promise<boolean> {
-  if (input.stack === undefined) {
-    await setupAsHub(input);
-  } else {
-    await setupAsSpoke({
-      stack: input.stack,
-      network: input.network,
-    });
-  }
-  return true;
-}
-
-async function setupAsHub(input: SetupInput): Promise<boolean> {
   input.zones!.forEach(async (zone, key) => {
     await createPrivateDnsZone({
       key,
@@ -38,30 +26,6 @@ async function setupAsHub(input: SetupInput): Promise<boolean> {
       network: input.network,
       dnsZoneContributors: input.dnsZoneContributors!,
       subscriptionId: input.subscriptionId!,
-    });
-  });
-  return true;
-}
-
-async function setupAsSpoke(input: {
-  stack: pulumi.StackReference;
-  network: azure_native.network.VirtualNetwork;
-}): Promise<boolean> {
-  const provider = new azure_native.Provider('provider', {
-    subscriptionId: await input.stack!.getOutputValue('subscriptionId'),
-  });
-  const networkName = await GetValue(input.network.name);
-  const zonesData: {
-    resourceGroupName: string;
-    name: string;
-  }[] = await input.stack!.getOutputValue('dnsZones');
-  zonesData.forEach(async (zone) => {
-    await linkPrivateDnsZone({
-      key: `${networkName}-${zone.name.replace('.', '-')}`,
-      dnsZoneName: zone.name,
-      resourceGroupName: zone.resourceGroupName,
-      networkId: input.network.id,
-      provider,
     });
   });
   return true;
@@ -116,29 +80,6 @@ async function createPrivateDnsZone(
   return true;
 }
 
-async function linkPrivateDnsZone(input: {
-  key: string;
-  dnsZoneName: string;
-  resourceGroupName: string;
-  networkId: pulumi.Output<string>;
-  provider: azure_native.Provider;
-}) {
-  const link = new azure_native.network.VirtualNetworkLink(
-    `vnet-link-${input.key}`,
-    {
-      location: 'Global',
-      privateZoneName: input.dnsZoneName,
-      registrationEnabled: false,
-      resourceGroupName: input.resourceGroupName,
-      virtualNetwork: {
-        id: input.networkId,
-      },
-      virtualNetworkLinkName: `vnet-link-${input.key}`,
-    },
-    { provider: input.provider },
-  );
-}
-
 export async function createAddressEntry(input: {
   ipAddress: string;
   name: string;
@@ -166,12 +107,4 @@ export async function createAddressEntry(input: {
       );
     });
   return true;
-}
-
-function GetValue<T>(output: pulumi.Output<T>) {
-  return new Promise<T>((resolve, reject) => {
-    output.apply((value) => {
-      resolve(value);
-    });
-  });
 }

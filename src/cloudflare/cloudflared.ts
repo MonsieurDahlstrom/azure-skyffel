@@ -19,7 +19,7 @@ import {
 } from '@pulumi/azure-native/compute';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 // private imports
-import { cidrHost } from '../network/core';
+import { GetValue } from '../utilities';
 
 export let virtualMachine: VirtualMachine;
 export let networkInterface: NetworkInterface;
@@ -161,12 +161,4 @@ runcmd:
     - sudo cloudflared service install ${cloudflared_tunnel_token}
     `;
   return Buffer.from(cloudInitConfig).toString('base64');
-}
-
-function GetValue<T>(output: pulumi.Output<T>) {
-  return new Promise<T>((resolve, reject) => {
-    output.apply((value) => {
-      resolve(value);
-    });
-  });
 }

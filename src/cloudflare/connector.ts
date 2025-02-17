@@ -16,8 +16,8 @@ import {
 } from '@pulumi/azure-native/compute';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import * as random from '@pulumi/random';
-import { cidrHost } from '../network/core.js';
-
+import { GetValue } from '../utilities';
+import { cidrHost } from '../network/core';
 export let virtualMachine: VirtualMachine | undefined;
 export let networkInterface: NetworkInterface | undefined;
 
@@ -142,12 +142,4 @@ runcmd:
   - warp-cli --accept-tos connect
 `;
   return Buffer.from(cloudInitConfig).toString('base64');
-}
-
-function GetValue<T>(output: Output<T>) {
-  return new Promise<T>((resolve, reject) => {
-    output.apply((value) => {
-      resolve(value);
-    });
-  });
 }

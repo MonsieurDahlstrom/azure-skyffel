@@ -23,6 +23,7 @@ export async function create(
   [
     azure_native.keyvault.Vault,
     pulumi.Output<azure_native.authorization.RoleAssignment>[],
+    azure_native.network.PrivateEndpoint,
   ]
 > {
   const randomKeyVaultName = new Random.RandomString('vault-name', {
@@ -113,5 +114,5 @@ export async function create(
       assignments.push(managerAssignment);
     }
   }
-  return [keyVault, assignments];
+  return [keyVault, assignments, keyVaultPrivateEndpoint];
 }
