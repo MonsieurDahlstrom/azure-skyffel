@@ -22,24 +22,24 @@ pulumi.runtime.setMocks(
   false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
 );
 
-describe('SplitHorizonResolver', function () {
-  let SplitHorizonResolver: typeof import('./private-resolver');
-  let NetworkCore: typeof import('../network/core');
+describe('HubDNSResolver', function () {
+  let HubDNSResolver: typeof import('./hub-dns-resolver');
+  let NetworkCore: typeof import('../network/core-network');
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
-    SplitHorizonResolver = await import('./private-resolver');
-    NetworkCore = await import('../network/core');
+    HubDNSResolver = await import('./hub-dns-resolver');
+    NetworkCore = await import('../network/core-network');
   });
 
   describe('#resolver', function () {
     test('is defined', () => {
-      expect(SplitHorizonResolver.resolver).toBeUndefined();
+      expect(HubDNSResolver.resolver).toBeUndefined();
     });
   });
 
   describe('#inboundEndpoint', function () {
     test('is defined', () => {
-      expect(SplitHorizonResolver.inboundEndpoint).toBeUndefined();
+      expect(HubDNSResolver.inboundEndpoint).toBeUndefined();
     });
   });
 
@@ -68,22 +68,20 @@ describe('SplitHorizonResolver', function () {
       subnet = NetworkCore.subnets.get('dmz');
     });
     test('is defined', () => {
-      expect(SplitHorizonResolver.setup).toBeTypeOf('function');
+      expect(HubDNSResolver.setup).toBeTypeOf('function');
     });
     test('does not throw', () => {
-      expect(
-        async () => await SplitHorizonResolver.setup(input),
-      ).to.not.throw();
+      expect(async () => await HubDNSResolver.setup(input)).to.not.throw();
     });
     test('has resolver after setup', async () => {
-      await SplitHorizonResolver.setup(input);
-      expect(SplitHorizonResolver.resolver).toBeInstanceOf(
+      await HubDNSResolver.setup(input);
+      expect(HubDNSResolver.resolver).toBeInstanceOf(
         azure_native.network.DnsResolver,
       );
     });
     test('has inboundEndpoint after setup', async () => {
-      await SplitHorizonResolver.setup(input);
-      expect(SplitHorizonResolver.inboundEndpoint).toBeInstanceOf(
+      await HubDNSResolver.setup(input);
+      expect(HubDNSResolver.inboundEndpoint).toBeInstanceOf(
         azure_native.network.InboundEndpoint,
       );
     });

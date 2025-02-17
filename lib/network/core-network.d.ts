@@ -16,10 +16,4 @@ export interface MDSubnetArgs extends azure.network.SubnetArgs {
   delegationType?: MDSubbnetDelegation;
 }
 export declare function setupSubnets(snets: Map<string, MDSubnetArgs>): void;
-export declare function cidrSubnet(
-  iprange: string,
-  newbits: number,
-  netnum: number,
-): string;
-export declare function cidrHost(iprange: string, hostnum: number): string;
-//# sourceMappingURL=core.d.ts.map
+//# sourceMappingURL=core-network.d.ts.map

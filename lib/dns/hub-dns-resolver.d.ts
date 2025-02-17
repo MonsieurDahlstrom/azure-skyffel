@@ -8,4 +8,4 @@ type PrivateResolverInput = {
 };
 export declare function setup(input: PrivateResolverInput): Promise<boolean>;
 export {};
-//# sourceMappingURL=private-resolver.d.ts.map
+//# sourceMappingURL=hub-dns-resolver.d.ts.map

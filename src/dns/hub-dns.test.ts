@@ -44,20 +44,20 @@ pulumi.runtime.setMocks(
 );
 
 describe('HubDNS', function () {
-  let SplitHorizonPrivateDNS: typeof import('./hub-dns');
-  let NetworkCore: typeof import('../network/core');
+  let HubDNS: typeof import('./hub-dns');
+  let NetworkCore: typeof import('../network/core-network');
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
-    SplitHorizonPrivateDNS = await import('./hub-dns');
-    NetworkCore = await import('../network/core');
+    HubDNS = await import('./hub-dns');
+    NetworkCore = await import('../network/core-network');
   });
 
   describe('#zones', function () {
     test('is defined', () => {
-      expect(SplitHorizonPrivateDNS.zones).toBeTypeOf('object');
+      expect(HubDNS.zones).toBeTypeOf('object');
     });
     test('is empty', () => {
-      expect(SplitHorizonPrivateDNS.zones.size).toBe(0);
+      expect(HubDNS.zones.size).toBe(0);
     });
   });
 
@@ -81,17 +81,15 @@ describe('HubDNS', function () {
       };
     });
     test('is defined', () => {
-      expect(SplitHorizonPrivateDNS.setup).toBeTypeOf('function');
+      expect(HubDNS.setup).toBeTypeOf('function');
     });
     test('does not throw', () => {
-      expect(
-        async () => await SplitHorizonPrivateDNS.setup(input),
-      ).to.not.throw();
+      expect(async () => await HubDNS.setup(input)).to.not.throw();
     });
     test('has zones after setup', async () => {
-      await SplitHorizonPrivateDNS.setup(input);
-      expect(SplitHorizonPrivateDNS.zones.size).toBe(1);
-      expect(SplitHorizonPrivateDNS.zones.get('aks')).toBeInstanceOf(
+      await HubDNS.setup(input);
+      expect(HubDNS.zones.size).toBe(1);
+      expect(HubDNS.zones.get('aks')).toBeInstanceOf(
         azure_native.network.PrivateZone,
       );
     });
@@ -117,16 +115,16 @@ describe('HubDNS', function () {
       };
     });
     test('is defined', () => {
-      expect(SplitHorizonPrivateDNS.createAddressEntry).toBeTypeOf('function');
+      expect(HubDNS.createAddressEntry).toBeTypeOf('function');
     });
     test('creates a records', async () => {
-      await SplitHorizonPrivateDNS.setup(input);
+      await HubDNS.setup(input);
       expect(
-        SplitHorizonPrivateDNS.createAddressEntry({
+        HubDNS.createAddressEntry({
           name: 'test',
           ipAddress: '10.0.0.4',
           resourceGroup,
-          dnsZone: SplitHorizonPrivateDNS.zones.get('aks')!,
+          dnsZone: HubDNS.zones.get('aks')!,
         }),
       ).toBeTruthy();
     });

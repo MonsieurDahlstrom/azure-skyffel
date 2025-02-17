@@ -56,11 +56,11 @@ pulumi.runtime.setMocks(
 
 describe('Vault', function () {
   let Vault: typeof import('./index');
-  let NetworkCore: typeof import('../network/core');
+  let NetworkCore: typeof import('../network/core-network');
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
     Vault = await import('./index');
-    NetworkCore = await import('../network/core');
+    NetworkCore = await import('../network/core-network');
   });
 
   describe('Vault module', function () {

@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeEach } from 'vitest';
-import { cidrHost, cidrSubnet } from './core';
+
 import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
 
@@ -23,38 +23,12 @@ pulumi.runtime.setMocks(
   false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
 );
 
-describe('cidrHost', () => {
-  test('cidrHost expected host with number', () => {
-    expect(cidrHost('10.0.0.0/16', 4)).toBe('10.0.0.4');
-  });
-  test('cidrHost expected host with string', () => {
-    expect(cidrHost('10.0.0.0/16', '4')).toBe('10.0.0.4');
-  });
-});
-
-describe('cidrSubnet', () => {
-  test('cidrSubnet expected host with number', () => {
-    expect(cidrSubnet('10.0.0.0/16', 1, 0)).toBe('10.0.0.0/17');
-  });
-  test('cidrSubnet expected host with number', () => {
-    expect(cidrSubnet('10.0.0.0/16', 4, 0)).toBe('10.0.0.0/20');
-  });
-  test('cidrSubnet expected to error', () => {
-    expect(() => cidrSubnet('10.0.0.0/16', 17, 0)).toThrowError(
-      /equested 17 new bits, but only 16 are available/,
-    );
-  });
-  test('cidrSubnet expected host with string', () => {
-    expect(cidrSubnet('10.0.0.0/16', 1, 1)).toBe('10.0.128.0/17');
-  });
-});
-
 describe('setupSubnets', () => {
   let NetworkCore: typeof import('./core');
   let resourceGroup: azure_native.resources.ResourceGroup;
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
-    NetworkCore = await import('./core');
+    NetworkCore = await import('./core-network');
     resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
       resourceGroupName: 'rg-test',
     });

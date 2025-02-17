@@ -17,7 +17,7 @@ import {
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import * as random from '@pulumi/random';
 import { GetValue } from '../utilities';
-import { cidrHost } from '../network/core';
+import { cidrHost } from '../utilities';
 export let virtualMachine: VirtualMachine | undefined;
 export let networkInterface: NetworkInterface | undefined;
 

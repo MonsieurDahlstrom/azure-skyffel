@@ -25,11 +25,11 @@ pulumi.runtime.setMocks(
 
 describe('RBAC Roles Assignments', function () {
   let AzureRoles: typeof import('./roles');
-  let NetworkCore: typeof import('../network/core');
+  let NetworkCore: typeof import('../network/core-network');
   beforeEach(async function () {
     // It's important to import the program _after_ the mocks are defined.
     AzureRoles = await import('./roles');
-    NetworkCore = await import('../network/core');
+    NetworkCore = await import('../network/core-network');
   });
 
   describe('RoleUUID', function () {
