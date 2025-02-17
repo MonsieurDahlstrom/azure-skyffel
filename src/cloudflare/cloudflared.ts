@@ -29,13 +29,12 @@ export type CloudflaredInput = {
     username: string;
     password: pulumi.Output<string>;
   };
-  routeCidr: string;
+  routeCidr: string | pulumi.Output<string>;
   cloudflare: {
     account: string;
     zone?: string;
   };
-  subnet?: Subnet;
-  subnetId?: string;
+  subnetId?: string | pulumi.Output<string>;
   resourceGroup: ResourceGroup;
   vmSize: string;
 };
@@ -56,11 +55,10 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
     accountId: input.cloudflare.account,
     network: input.routeCidr,
     tunnelId: vnetTunnel.id,
-    comment: `route to ${input.routeCidr}`,
+    comment: pulumi.interpolate`Route to ${input.routeCidr}`,
   });
   //create nic
   let networkInterfaceDependencies: pulumi.Resource[] = [];
-  if (input.subnet) networkInterfaceDependencies.push(input.subnet);
   networkInterface = new NetworkInterface(
     'cloudflare-connector-nic',
     {
@@ -71,7 +69,7 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
         {
           name: 'internal',
           subnet: {
-            id: input.subnetId ? input.subnetId : input.subnet?.id,
+            id: input.subnetId,
           },
           privateIPAllocationMethod: 'Dynamic',
         },
@@ -86,7 +84,6 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
     networkInterface,
     vnetTunnel,
   ];
-  if (input.subnet) virtualMachineDependencies.push(input.subnet);
   virtualMachine = new VirtualMachine(
     'cloudflare-connector-vm',
     {

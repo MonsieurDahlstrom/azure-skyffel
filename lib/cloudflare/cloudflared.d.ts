@@ -1,5 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
-import { Subnet, NetworkInterface } from '@pulumi/azure-native/network';
+import { NetworkInterface } from '@pulumi/azure-native/network';
 import { VirtualMachine } from '@pulumi/azure-native/compute';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 export declare let virtualMachine: VirtualMachine;
@@ -9,13 +9,12 @@ export type CloudflaredInput = {
     username: string;
     password: pulumi.Output<string>;
   };
-  routeCidr: string;
+  routeCidr: string | pulumi.Output<string>;
   cloudflare: {
     account: string;
     zone?: string;
   };
-  subnet?: Subnet;
-  subnetId?: string;
+  subnetId?: string | pulumi.Output<string>;
   resourceGroup: ResourceGroup;
   vmSize: string;
 };

@@ -24,8 +24,8 @@ import { parse } from 'yaml';
 export type AksInput = {
   name: string;
   resourceGroup: ResourceGroup;
-  networkId: string;
-  nodesId: string;
+  networkId: string | pulumi.Output<string>;
+  nodesId: string | pulumi.Output<string>;
   defaultNode: {
     min: number;
     max: number;
@@ -34,7 +34,7 @@ export type AksInput = {
     diskSize: number;
     osDiskType: OSDiskType;
   };
-  privateDnsZoneId: string;
+  privateDnsZoneId: string | pulumi.Output<string>;
   subscriptionId: string;
   // TODO: tags commonTags?: { [key: string]: string };
 };
@@ -48,35 +48,15 @@ export async function setup(input: AksInput): Promise<boolean> {
   clusterIdentity = new UserAssignedIdentity(`identity-${input.name}`, {
     resourceGroupName: input.resourceGroup.name,
   });
+
   const neededRoles = pulumi
     .all([clusterIdentity.principalId])
-    .apply(([principalId]): RoleAssignment[] => {
-      let roles: RoleAssignment[] = [];
-      roles.push(
-        AzureRoles.assignRole({
-          principal: {
-            id: principalId!,
-            type: 'ServicePrincipal',
-          },
-          rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-          scope: input.privateDnsZoneId,
-          key: 'kubernetes',
-          subscriptionId: input.subscriptionId,
-        }),
-      );
-      roles.push(
-        AzureRoles.assignRole({
-          principal: {
-            id: principalId!,
-            type: 'ServicePrincipal',
-          },
-          rbacRole: AzureRoles.RoleUUID.NetworkContributor,
-          scope: input.networkId,
-          key: 'kubernetes',
-          subscriptionId: input.subscriptionId,
-        }),
-      );
-      return roles;
+    .apply(([principalId]) => {
+      let networkRole: RoleAssignment | pulumi.Output<RoleAssignment> =
+        grantNetworkAccessToIdentity(principalId!, input);
+      let privateDnsRole: RoleAssignment | pulumi.Output<RoleAssignment> =
+        grantDNSContributorToIdentity(principalId!, input);
+      return [networkRole, privateDnsRole];
     });
   // Create the AKS cluster
   cluster = new ManagedCluster(
@@ -136,4 +116,62 @@ export async function setup(input: AksInput): Promise<boolean> {
     resourceName: cluster.name,
   });
   return true;
+}
+
+function grantNetworkAccessToIdentity(
+  principalId: string,
+  input: AksInput,
+): RoleAssignment | pulumi.Output<RoleAssignment> {
+  if (typeof input.networkId === 'string') {
+    return AzureRoles.assignRole({
+      principal: {
+        id: principalId,
+        type: 'ServicePrincipal',
+      },
+      rbacRole: AzureRoles.RoleUUID.NetworkContributor,
+      scope: input.networkId,
+      key: 'kubernetes',
+      subscriptionId: input.subscriptionId,
+    });
+  } else {
+    return AzureRoles.assignRoleOutput({
+      principal: {
+        id: principalId,
+        type: 'ServicePrincipal',
+      },
+      rbacRole: AzureRoles.RoleUUID.NetworkContributor,
+      scope: input.networkId,
+      key: 'kubernetes',
+      subscriptionId: input.subscriptionId,
+    });
+  }
+}
+
+function grantDNSContributorToIdentity(
+  principalId: string,
+  input: AksInput,
+): RoleAssignment | pulumi.Output<RoleAssignment> {
+  if (typeof input.privateDnsZoneId === 'string') {
+    return AzureRoles.assignRole({
+      principal: {
+        id: principalId!,
+        type: 'ServicePrincipal',
+      },
+      rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
+      scope: input.privateDnsZoneId,
+      key: 'kubernetes',
+      subscriptionId: input.subscriptionId,
+    });
+  } else {
+    return AzureRoles.assignRoleOutput({
+      principal: {
+        id: principalId,
+        type: 'ServicePrincipal',
+      },
+      rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
+      scope: input.privateDnsZoneId,
+      key: 'kubernetes',
+      subscriptionId: input.subscriptionId,
+    });
+  }
 }

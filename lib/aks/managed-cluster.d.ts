@@ -9,8 +9,8 @@ import * as pulumi from '@pulumi/pulumi';
 export type AksInput = {
   name: string;
   resourceGroup: ResourceGroup;
-  networkId: string;
-  nodesId: string;
+  networkId: string | pulumi.Output<string>;
+  nodesId: string | pulumi.Output<string>;
   defaultNode: {
     min: number;
     max: number;
@@ -19,7 +19,7 @@ export type AksInput = {
     diskSize: number;
     osDiskType: OSDiskType;
   };
-  privateDnsZoneId: string;
+  privateDnsZoneId: string | pulumi.Output<string>;
   subscriptionId: string;
 };
 export declare let cluster: ManagedCluster;
