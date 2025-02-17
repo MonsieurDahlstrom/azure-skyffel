@@ -5,6 +5,8 @@ export declare let zones: Map<
 >;
 export declare function setup(
   stackLocation: string,
-  network: azure_native.network.GetVirtualNetworkResult,
+  network:
+    | azure_native.network.GetVirtualNetworkResult
+    | azure_native.network.VirtualNetwork,
 ): Promise<void>;
 //# sourceMappingURL=spoke-dns.d.ts.map

@@ -1,15 +1,22 @@
 import * as pulumi from '@pulumi/pulumi';
-import { NetworkInterface } from '@pulumi/azure-native/network';
+import {
+  Subnet,
+  NetworkInterface,
+  PrivateZone,
+} from '@pulumi/azure-native/network';
 import { VirtualMachine } from '@pulumi/azure-native/compute';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import { Vault } from '@pulumi/azure-native/keyvault';
 import { UserAssignedIdentity } from '@pulumi/azure-native/managedidentity';
 import * as AzureRoles from '../rbac/roles';
 export type VaultInput = {
-  subnetId: string;
+  subnetId?: string;
+  subnet?: Subnet;
   keyVault: {
-    subnetId: string;
-    dnsZoneId: string;
+    subnetId?: string;
+    subnet?: Subnet;
+    dnsZoneId?: string;
+    dnsZone?: PrivateZone;
     readers?: AzureRoles.RbacAssignee[];
     officers?: AzureRoles.RbacAssignee[];
     dataAccessManagers?: AzureRoles.RbacAssignee[];

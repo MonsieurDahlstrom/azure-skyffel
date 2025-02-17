@@ -7,7 +7,8 @@ import { parse as parseYaml } from 'yaml';
 type CreateVirtualMachine = {
   keyVault: azure_native.keyvault.Vault;
   resourceGroup: azure_native.resources.ResourceGroup;
-  subnetId: string;
+  subnetId?: string;
+  subnet?: azure_native.network.Subnet;
   tenantId: string;
   tls: {
     cloudflareApiToken: string;
@@ -52,7 +53,8 @@ export async function createVirtualMachine(
         {
           name: 'internal',
           subnet: {
-            id: input.subnetId,
+            id:
+              input.subnetId !== undefined ? input.subnetId : input.subnet!.id,
           },
           privateIPAllocationMethod: 'Dynamic',
         },

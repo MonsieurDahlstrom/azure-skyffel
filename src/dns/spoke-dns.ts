@@ -6,7 +6,9 @@ export let zones: Map<string, azure_native.network.GetPrivateZoneResult> =
 
 export async function setup(
   stackLocation: string,
-  network: azure_native.network.GetVirtualNetworkResult,
+  network:
+    | azure_native.network.GetVirtualNetworkResult
+    | azure_native.network.VirtualNetwork,
 ) {
   const stack = new pulumi.StackReference(stackLocation);
   const subscriptionId = await stack.getOutputValue('subscriptionId');
@@ -40,7 +42,7 @@ async function linkPrivateDnsZone(input: {
   key: string;
   dnsZoneName: string;
   resourceGroupName: string;
-  networkId: string;
+  networkId: string | pulumi.Output<string>;
   provider: azure_native.Provider;
 }) {
   await azure_native.network

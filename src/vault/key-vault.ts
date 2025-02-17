@@ -9,8 +9,10 @@ type SetupKeyVault = {
   resourceGroup: azure_native.resources.ResourceGroup;
   tenantId: string;
   subscriptionId: string;
-  subnetId: string;
-  dnsZoneId: string;
+  subnetId?: string;
+  subnet?: azure_native.network.Subnet;
+  dnsZone?: azure_native.network.PrivateZone;
+  dnsZoneId?: string;
   readers?: AzureRoles.RbacAssignee[];
   officers?: AzureRoles.RbacAssignee[];
   dataAccessManagers?: AzureRoles.RbacAssignee[];
@@ -28,7 +30,9 @@ export async function createKeyVault(
     name: 'vault',
     resourceGroup: input.resourceGroup,
     subnetId: input.subnetId,
+    subnet: input.subnet,
     dnsZoneId: input.dnsZoneId,
+    dnsZone: input.dnsZone,
     tenantId: input.tenantId,
     subscriptionId: input.subscriptionId,
     readers: input.readers,
