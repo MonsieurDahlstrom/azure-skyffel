@@ -68,13 +68,15 @@ async function linkPrivateDnsZone(input: {
   provider: azure_native.Provider;
 }) {
   await azure_native.network
-    .getVirtualNetworkLink({
-      privateZoneName: input.dnsZoneName,
-      resourceGroupName: input.resourceGroupName,
-      virtualNetworkLinkName: input.key,
-    })
+    .getVirtualNetworkLink(
+      {
+        privateZoneName: input.dnsZoneName,
+        resourceGroupName: input.resourceGroupName,
+        virtualNetworkLinkName: input.key,
+      },
+      { provider: input.provider },
+    )
     .catch((error) => {
-      console.log(`getVirtualNetworkLink error: ${error}`);
       const link = new azure_native.network.VirtualNetworkLink(
         input.key,
         {
