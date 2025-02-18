@@ -13,6 +13,7 @@ type SetupInput = {
   resourceGroup: azure_native.resources.ResourceGroup;
   network: azure_native.network.VirtualNetwork;
   dnsZoneContributors?: PrivateDnsZoneContributorIdentity[];
+  dnsZoneRoleAdministrators?: PrivateDnsZoneContributorIdentity[];
   subscriptionId?: string;
   stack?: pulumi.StackReference;
   zones?: Map<string, pulumi.Output<string>>;
@@ -36,7 +37,8 @@ type CreatePrivateDnsZoneInput = {
   zone: pulumi.Output<string>;
   resourceGroup: azure_native.resources.ResourceGroup;
   network: azure_native.network.VirtualNetwork;
-  dnsZoneContributors: PrivateDnsZoneContributorIdentity[];
+  dnsZoneContributors?: PrivateDnsZoneContributorIdentity[];
+  dnsZoneRoleAdministrators?: PrivateDnsZoneContributorIdentity[];
   subscriptionId: string;
 };
 async function createPrivateDnsZone(
@@ -66,11 +68,22 @@ async function createPrivateDnsZone(
     { dependsOn: [privateDnsZone, input.network, input.resourceGroup] },
   );
   zones.set(input.key, privateDnsZone);
-  if (input.dnsZoneContributors.length > 0) {
-    input.dnsZoneContributors.forEach(async (contributor) => {
-      AzureRoles.assignRoleOutput({
+  if (input.dnsZoneContributors) {
+    input.dnsZoneContributors.forEach((contributor) => {
+      return AzureRoles.assignRoleOutput({
         principal: contributor,
         rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
+        scope: privateDnsZone.id,
+        key: input.key,
+        subscriptionId: input.subscriptionId,
+      });
+    });
+  }
+  if (input.dnsZoneRoleAdministrators) {
+    input.dnsZoneRoleAdministrators.forEach((contributor) => {
+      return AzureRoles.assignRoleOutput({
+        principal: contributor,
+        rbacRole: AzureRoles.RoleUUID.RoleBasedAccessControlAdministrator,
         scope: privateDnsZone.id,
         key: input.key,
         subscriptionId: input.subscriptionId,

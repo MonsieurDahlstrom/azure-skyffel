@@ -9,6 +9,7 @@ type SetupInput = {
   resourceGroup: azure_native.resources.ResourceGroup;
   network: azure_native.network.VirtualNetwork;
   dnsZoneContributors?: PrivateDnsZoneContributorIdentity[];
+  dnsZoneRoleAdministrators?: PrivateDnsZoneContributorIdentity[];
   subscriptionId?: string;
   stack?: pulumi.StackReference;
   zones?: Map<string, pulumi.Output<string>>;

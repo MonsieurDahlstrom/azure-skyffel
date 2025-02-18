@@ -10,6 +10,7 @@ export declare const RoleUUID: {
   KeyVaultCertificateOfficer: string;
   KeyVaultCertificateUser: string;
   KeyVaultDataAccessAdministrator: string;
+  RoleBasedAccessControlAdministrator: string;
 };
 export type RbacAssignee = {
   id: string;

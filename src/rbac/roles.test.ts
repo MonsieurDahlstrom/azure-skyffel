@@ -76,6 +76,11 @@ describe('RBAC Roles Assignments', function () {
         'a4417e6f-fecd-4de8-b567-7b0420556985',
       );
     });
+    test('has role acess administrator', function () {
+      expect(AzureRoles.RoleUUID.RoleBasedAccessControlAdministrator).toBe(
+        'f58310d9-a9f6-439a-9e8d-f62e7b41a168',
+      );
+    });
   });
 
   describe('assignRole', function () {

@@ -12,6 +12,7 @@ export const RoleUUID = {
   KeyVaultCertificateOfficer: 'a4417e6f-fecd-4de8-b567-7b0420556985',
   KeyVaultCertificateUser: 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba',
   KeyVaultDataAccessAdministrator: '8b54135c-b56d-4d72-a534-26097cfdc8d8',
+  RoleBasedAccessControlAdministrator: 'f58310d9-a9f6-439a-9e8d-f62e7b41a168',
 };
 
 export type RbacAssignee = {
