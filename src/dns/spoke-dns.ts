@@ -3,7 +3,7 @@ import * as azure_native from '@pulumi/azure-native';
 
 export let zones: Map<string, azure_native.network.GetPrivateZoneResult> =
   new Map();
-
+export let resourceGroupName: string;
 export async function setup(
   stackLocation: string,
   network:
@@ -11,6 +11,7 @@ export async function setup(
     | azure_native.network.VirtualNetwork,
 ) {
   const stack = new pulumi.StackReference(stackLocation);
+  resourceGroupName = await stack.getOutputValue('resourceGroupName');
   const subscriptionId = await stack.getOutputValue('subscriptionId');
   const provider = new azure_native.Provider('provider', {
     subscriptionId,
@@ -22,7 +23,7 @@ export async function setup(
       zoneData.name,
       await azure_native.network.getPrivateZone(
         {
-          resourceGroupName: zoneData.resourceGroupName,
+          resourceGroupName,
           privateZoneName: zoneData.name,
         },
         {
@@ -38,6 +39,29 @@ export async function setup(
     }
   });
   await Promise.all(linkPromises);
+}
+
+export function createRecordSet(input: {
+  zone: azure_native.network.GetPrivateZoneResult;
+  recordType: string;
+  host: string;
+  ipv4Address: string | pulumi.Output<string>;
+}): azure_native.network.PrivateRecordSet {
+  return new azure_native.network.PrivateRecordSet(
+    `arecord-${input.host}-${input.zone.name.replace('.', '-')}`,
+    {
+      aRecords: [
+        {
+          ipv4Address: input.ipv4Address,
+        },
+      ],
+      privateZoneName: input.zone.name!,
+      recordType: input.recordType,
+      relativeRecordSetName: input.host,
+      resourceGroupName,
+      ttl: 3600,
+    },
+  );
 }
 
 async function checkLink(input: {
