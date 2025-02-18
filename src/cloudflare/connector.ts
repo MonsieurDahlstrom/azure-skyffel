@@ -1,4 +1,4 @@
-import { Output } from '@pulumi/pulumi';
+import { Output, Resource } from '@pulumi/pulumi';
 
 import * as cloudflare from '@pulumi/cloudflare';
 import {
@@ -23,42 +23,32 @@ export let networkInterface: NetworkInterface | undefined;
 
 export type CloudflareConnectorInput = {
   user: {
-    username: string;
+    username: Output<string>;
     password: Output<string>;
   };
-  subnet: Subnet;
+  subnetId?: string | Output<string>;
   resourceGroup: ResourceGroup;
   tunnelToken: string;
   vmSize: string;
 };
 export async function setup(input: CloudflareConnectorInput): Promise<boolean> {
-  const addressPrefix = await GetValue(
-    input.subnet.addressPrefix.apply((prefix) => prefix),
-  );
-  if (!addressPrefix) throw new Error('Subnet address prefix not found');
   //create nic
-  networkInterface = new NetworkInterface(
-    'cloudflare-connector-nic',
-    {
-      resourceGroupName: input.resourceGroup.name,
-      location: input.resourceGroup.location,
-      enableIPForwarding: true,
-      ipConfigurations: [
-        {
-          name: 'internal',
-          subnet: {
-            id: input.subnet.id,
-          },
-          privateIPAllocationMethod: 'Static',
-          privateIPAddress: cidrHost(addressPrefix, 4),
+  networkInterface = new NetworkInterface('cloudflare-connector-nic', {
+    resourceGroupName: input.resourceGroup.name,
+    location: input.resourceGroup.location,
+    enableIPForwarding: true,
+    ipConfigurations: [
+      {
+        name: 'internal',
+        subnet: {
+          id: input.subnetId,
         },
-      ],
-    },
-    {
-      dependsOn: [input.subnet],
-    },
-  );
+        privateIPAllocationMethod: 'Dynamic',
+      },
+    ],
+  });
   //create vm
+  let virtualMachineDependencies: Resource[] = [networkInterface];
   virtualMachine = new VirtualMachine(
     'cloudflare-connector-vm',
     {
@@ -117,7 +107,9 @@ export async function setup(input: CloudflareConnectorInput): Promise<boolean> {
       },
     },
     {
-      dependsOn: [networkInterface, input.subnet],
+      dependsOn: virtualMachineDependencies,
+      replaceOnChanges: ['osProfile'],
+      deleteBeforeReplace: true,
     },
   );
   return true;

@@ -1,15 +1,15 @@
 import { Output } from '@pulumi/pulumi';
-import { Subnet, NetworkInterface } from '@pulumi/azure-native/network';
+import { NetworkInterface } from '@pulumi/azure-native/network';
 import { VirtualMachine } from '@pulumi/azure-native/compute';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 export declare let virtualMachine: VirtualMachine | undefined;
 export declare let networkInterface: NetworkInterface | undefined;
 export type CloudflareConnectorInput = {
   user: {
-    username: string;
+    username: Output<string>;
     password: Output<string>;
   };
-  subnet: Subnet;
+  subnetId?: string | Output<string>;
   resourceGroup: ResourceGroup;
   tunnelToken: string;
   vmSize: string;
