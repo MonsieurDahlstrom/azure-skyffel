@@ -23,20 +23,21 @@ export async function setup(
   });
   const zonesData: { resourceGroupName: string; name: string }[] =
     await stack.getOutputValue('dnsZones');
-  zonesData.forEach(async (zoneData) => {
-    zones.set(
-      zoneData.name,
-      await azure_native.network.getPrivateZone(
-        {
-          resourceGroupName,
-          privateZoneName: zoneData.name,
-        },
-        {
-          provider,
-        },
-      ),
+  //get the zones
+  const getPrivateZonePromises = zonesData.map(async (zoneData) => {
+    const zone = await azure_native.network.getPrivateZone(
+      {
+        resourceGroupName,
+        privateZoneName: zoneData.name,
+      },
+      {
+        provider,
+      },
     );
+    zones.set(zoneData.name, zone);
   });
+  await Promise.all(getPrivateZonePromises);
+  //get the links
   const linkPromises = zonesData.map(async (zoneData) => {
     const linkExists = await checkLink({ network, zoneData });
     if (!linkExists) {
