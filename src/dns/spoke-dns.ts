@@ -3,17 +3,22 @@ import * as azure_native from '@pulumi/azure-native';
 
 export let zones: Map<string, azure_native.network.GetPrivateZoneResult> =
   new Map();
-export let resourceGroupName: string;
+
+let resourceGroupName: string;
+let stack: pulumi.StackReference;
+let provider: azure_native.Provider;
+let subscriptionId: string;
+
 export async function setup(
   stackLocation: string,
   network:
     | azure_native.network.GetVirtualNetworkResult
     | azure_native.network.VirtualNetwork,
 ) {
-  const stack = new pulumi.StackReference(stackLocation);
+  stack = new pulumi.StackReference(stackLocation);
   resourceGroupName = await stack.getOutputValue('resourceGroupName');
-  const subscriptionId = await stack.getOutputValue('subscriptionId');
-  const provider = new azure_native.Provider('provider', {
+  subscriptionId = await stack.getOutputValue('subscriptionId');
+  provider = new azure_native.Provider('provider', {
     subscriptionId,
   });
   const zonesData: { resourceGroupName: string; name: string }[] =
@@ -33,9 +38,9 @@ export async function setup(
     );
   });
   const linkPromises = zonesData.map(async (zoneData) => {
-    const linkExists = await checkLink({ network, zoneData, provider });
+    const linkExists = await checkLink({ network, zoneData });
     if (!linkExists) {
-      return createLink({ network, zoneData, provider });
+      return createLink({ network, zoneData });
     }
   });
   await Promise.all(linkPromises);
@@ -61,6 +66,9 @@ export function createRecordSet(input: {
       resourceGroupName,
       ttl: 3600,
     },
+    {
+      provider,
+    },
   );
 }
 
@@ -69,7 +77,6 @@ async function checkLink(input: {
     | azure_native.network.GetVirtualNetworkResult
     | azure_native.network.VirtualNetwork;
   zoneData: { resourceGroupName: string; name: string };
-  provider: azure_native.Provider;
 }): Promise<boolean> {
   if (typeof input.network.name === 'string') {
     const key = `${input.network.name}-${input.zoneData.name.replace('.', '-')}`;
@@ -80,7 +87,9 @@ async function checkLink(input: {
           resourceGroupName: input.zoneData.resourceGroupName,
           virtualNetworkLinkName: key,
         },
-        { provider: input.provider },
+        {
+          provider,
+        },
       );
       return true;
     } catch (error) {
@@ -97,7 +106,9 @@ async function checkLink(input: {
               resourceGroupName: input.zoneData.resourceGroupName,
               virtualNetworkLinkName: key,
             },
-            { provider: input.provider },
+            {
+              provider,
+            },
           );
           resolve(true);
         } catch (error) {
@@ -113,7 +124,6 @@ async function createLink(input: {
     | azure_native.network.GetVirtualNetworkResult
     | azure_native.network.VirtualNetwork;
   zoneData: { resourceGroupName: string; name: string };
-  provider: azure_native.Provider;
 }) {
   if (typeof input.network.name === 'string') {
     const key = `${input.network.name}-${input.zoneData.name.replace('.', '-')}`;
@@ -129,7 +139,9 @@ async function createLink(input: {
         },
         virtualNetworkLinkName: `vnet-link-${key}`,
       },
-      { provider: input.provider },
+      {
+        provider,
+      },
     );
   } else {
     input.network.name.apply(async (name) => {
@@ -146,7 +158,9 @@ async function createLink(input: {
           },
           virtualNetworkLinkName: `vnet-link-${key}`,
         },
-        { provider: input.provider },
+        {
+          provider,
+        },
       );
     });
   }

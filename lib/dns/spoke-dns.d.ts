@@ -4,7 +4,6 @@ export declare let zones: Map<
   string,
   azure_native.network.GetPrivateZoneResult
 >;
-export declare let resourceGroupName: string;
 export declare function setup(
   stackLocation: string,
   network:
