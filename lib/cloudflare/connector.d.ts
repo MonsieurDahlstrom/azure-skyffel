@@ -6,8 +6,8 @@ export declare let virtualMachine: VirtualMachine | undefined;
 export declare let networkInterface: NetworkInterface | undefined;
 export type CloudflareConnectorInput = {
   user: {
-    username: Output<string>;
-    password: Output<string>;
+    username: string | Output<string>;
+    password: string | Output<string>;
   };
   subnetId?: string | Output<string>;
   resourceGroup: ResourceGroup;
