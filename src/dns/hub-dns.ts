@@ -25,7 +25,8 @@ export async function setup(input: SetupInput): Promise<boolean> {
       zone,
       resourceGroup: input.resourceGroup,
       network: input.network,
-      dnsZoneContributors: input.dnsZoneContributors!,
+      dnsZoneContributors: input.dnsZoneContributors,
+      dnsZoneRoleAdministrators: input.dnsZoneRoleAdministrators,
       subscriptionId: input.subscriptionId!,
     });
   });
