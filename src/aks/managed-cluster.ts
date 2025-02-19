@@ -93,7 +93,7 @@ export async function setup(input: AksInput): Promise<boolean> {
       ],
       apiServerAccessProfile: {
         enablePrivateCluster: true,
-        enablePrivateClusterPublicFQDN: false,
+        enablePrivateClusterPublicFQDN: true,
         disableRunCommand: false,
         privateDNSZone: input.privateDnsZoneId,
       },
