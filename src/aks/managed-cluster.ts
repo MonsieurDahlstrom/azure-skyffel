@@ -110,7 +110,7 @@ export async function setup(input: AksInput): Promise<boolean> {
         serviceCidr: '172.16.0.0/24',
       },
       oidcIssuerProfile: {
-        enabled: false,
+        enabled: true,
       },
       publicNetworkAccess: 'Disabled',
       resourceGroupName: input.resourceGroup.name,
