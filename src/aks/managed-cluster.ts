@@ -65,21 +65,9 @@ export async function setup(input: AksInput): Promise<boolean> {
   cluster = new ManagedCluster(
     input.name,
     {
-      resourceGroupName: input.resourceGroup.name,
-      identity: {
-        type: ResourceIdentityType.UserAssigned,
-        userAssignedIdentities: [clusterIdentity.id],
-      },
-      networkProfile: {
-        networkDataplane: NetworkDataplane.Cilium,
-        networkPlugin: NetworkPlugin.Azure,
-        networkPluginMode: NetworkPluginMode.Overlay,
-        podCidr: '172.16.4.0/22',
-        serviceCidr: '172.16.0.0/24',
-        dnsServiceIP: '172.16.0.10',
-      },
       agentPoolProfiles: [
         {
+          availabilityZones: input.defaultNode.zones,
           count: input.defaultNode.min,
           maxPods: 110,
           mode: 'System',
@@ -91,26 +79,41 @@ export async function setup(input: AksInput): Promise<boolean> {
           type: 'VirtualMachineScaleSets',
           vmSize: input.defaultNode.vmSize,
           vnetSubnetID: input.nodesId,
-          availabilityZones: input.defaultNode.zones,
         },
       ],
       apiServerAccessProfile: {
+        disableRunCommand: false,
         enablePrivateCluster: true,
         enablePrivateClusterPublicFQDN: true,
-        disableRunCommand: false,
         privateDNSZone: input.privateDnsZoneId ?? 'system',
       },
       autoScalerProfile: {
         scaleDownDelayAfterAdd: '15m',
         scanInterval: '30s',
       },
-      dnsPrefix: input.name,
-      enableRBAC: true,
-      kubernetesVersion: input.kubernetes_version ?? '1.31',
-      publicNetworkAccess: 'Disabled',
       autoUpgradeProfile: {
         upgradeChannel: UpgradeChannel.Node_image,
       },
+      dnsPrefix: input.name,
+      enableRBAC: true,
+      identity: {
+        type: ResourceIdentityType.UserAssigned,
+        userAssignedIdentities: [clusterIdentity.id],
+      },
+      kubernetesVersion: input.kubernetes_version ?? '1.31',
+      networkProfile: {
+        dnsServiceIP: '172.16.0.10',
+        networkDataplane: NetworkDataplane.Cilium,
+        networkPlugin: NetworkPlugin.Azure,
+        networkPluginMode: NetworkPluginMode.Overlay,
+        podCidr: '172.16.4.0/22',
+        serviceCidr: '172.16.0.0/24',
+      },
+      oidcIssuerProfile: {
+        enabled: false,
+      },
+      publicNetworkAccess: 'Disabled',
+      resourceGroupName: input.resourceGroup.name,
       securityProfile: {
         imageCleaner: {
           enabled: true,
