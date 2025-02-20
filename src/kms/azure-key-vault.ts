@@ -26,17 +26,20 @@ export async function create(
     azure_native.network.PrivateEndpoint,
   ]
 > {
-  /*
-  const randomKeyVaultName = new Random.RandomString('vault-name', {
-    length: 24 - (input.name.length + 4),
-    special: false,
-    lower: true,
-    upper: false,
-  });
-  */
+  const randomKeyVaultName = new Random.RandomString(
+    `kv-${input.name}-randomizer`,
+    {
+      length: 24 - (input.name.length + 4),
+      special: false,
+      lower: true,
+      upper: false,
+    },
+  );
   //Create a keyault to keep the unsealed key for the hashicorp vault
   const keyVault = new azure_native.keyvault.Vault(`kv-${input.name}`, {
-    vaultName: `kv-${input.name}`,
+    vaultName: randomKeyVaultName.result.apply(
+      (suffix) => `kv-${input.name}-${suffix}`,
+    ),
     location: input.resourceGroup.location,
     resourceGroupName: input.resourceGroup.name,
     properties: {
