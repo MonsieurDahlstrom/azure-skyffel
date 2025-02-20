@@ -20,6 +20,7 @@ import {
 import * as AzureRoles from '../rbac/roles';
 import * as pulumi from '@pulumi/pulumi';
 import { parse } from 'yaml';
+import { UpdateResource } from '@ediri/azapi';
 
 export type AksInput = {
   name: string;
@@ -43,6 +44,7 @@ export type AksInput = {
 export let cluster: ManagedCluster;
 export let clusterIdentity: UserAssignedIdentity;
 export let adminCredentials: pulumi.Output<ListManagedClusterAdminCredentialsResult>;
+export let acns: UpdateResource;
 
 export async function setup(input: AksInput): Promise<boolean> {
   //create an entra identity for the cluster
@@ -130,6 +132,19 @@ export async function setup(input: AksInput): Promise<boolean> {
   adminCredentials = listManagedClusterAdminCredentialsOutput({
     resourceGroupName: input.resourceGroup.name,
     resourceName: cluster.name,
+  });
+  acns = new UpdateResource(`${input.name}-acns`, {
+    resourceId: cluster.id,
+    type: 'Microsoft.ContainerService/managedClusters@2024-10-01',
+    body: JSON.stringify({
+      properties: {
+        networkProfile: {
+          advancedNetworking: {
+            enabled: true,
+          },
+        },
+      },
+    }),
   });
   return true;
 }

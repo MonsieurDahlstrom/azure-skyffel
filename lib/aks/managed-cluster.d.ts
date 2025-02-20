@@ -6,6 +6,7 @@ import {
 import { UserAssignedIdentity } from '@pulumi/azure-native/managedidentity';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
 import * as pulumi from '@pulumi/pulumi';
+import { UpdateResource } from '@ediri/azapi';
 export type AksInput = {
   name: string;
   resourceGroup: ResourceGroup;
@@ -29,5 +30,6 @@ export type AksInput = {
 export declare let cluster: ManagedCluster;
 export declare let clusterIdentity: UserAssignedIdentity;
 export declare let adminCredentials: pulumi.Output<ListManagedClusterAdminCredentialsResult>;
+export declare let acns: UpdateResource;
 export declare function setup(input: AksInput): Promise<boolean>;
 //# sourceMappingURL=managed-cluster.d.ts.map
