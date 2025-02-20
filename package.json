@@ -35,7 +35,7 @@
     "prettier": "^3.5.1",
     "semantic-release": "^24.2.3",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.6"
   },
   "release": {
     "branches": [
@@ -59,11 +59,11 @@
   "dependencies": {
     "@ediri/azapi": "^1.12.2",
     "@pulumi/azure-native": "^2.88.0",
-    "@pulumi/cloudflare": "^5.49.0",
+    "@pulumi/cloudflare": "^5.49.1",
     "@pulumi/kubernetes": "^4.21.1",
     "@pulumi/random": "^4.17.0",
     "jsbn": "^1.1.0",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "yaml": "^2.7.0"
   }
 }
