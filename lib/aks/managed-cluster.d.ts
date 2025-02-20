@@ -19,8 +19,12 @@ export type AksInput = {
     diskSize: number;
     osDiskType: OSDiskType;
   };
-  privateDnsZoneId: string | pulumi.Output<string>;
+  privateDnsZoneId?: string | pulumi.Output<string>;
   subscriptionId: string;
+  kubernetes_version?: string;
+  tags?: {
+    [key: string]: string;
+  };
 };
 export declare let cluster: ManagedCluster;
 export declare let clusterIdentity: UserAssignedIdentity;

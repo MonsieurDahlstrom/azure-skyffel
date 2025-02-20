@@ -34,9 +34,10 @@ export type AksInput = {
     diskSize: number;
     osDiskType: OSDiskType;
   };
-  privateDnsZoneId: string | pulumi.Output<string>;
+  privateDnsZoneId?: string | pulumi.Output<string>;
   subscriptionId: string;
-  // TODO: tags commonTags?: { [key: string]: string };
+  kubernetes_version?: string;
+  tags?: { [key: string]: string };
 };
 
 export let cluster: ManagedCluster;
@@ -48,15 +49,17 @@ export async function setup(input: AksInput): Promise<boolean> {
   clusterIdentity = new UserAssignedIdentity(`identity-${input.name}`, {
     resourceGroupName: input.resourceGroup.name,
   });
-
   const neededRoles = pulumi
     .all([clusterIdentity.principalId])
     .apply(([principalId]) => {
-      let networkRole: RoleAssignment | pulumi.Output<RoleAssignment> =
-        grantNetworkAccessToIdentity(principalId!, input);
-      let privateDnsRole: RoleAssignment | pulumi.Output<RoleAssignment> =
-        grantDNSContributorToIdentity(principalId!, input);
-      return [networkRole, privateDnsRole];
+      let roles = [];
+      if (input.networkId) {
+        roles.push(grantNetworkAccessToIdentity(principalId!, input));
+      }
+      if (input.privateDnsZoneId) {
+        roles.push(grantDNSContributorToIdentity(principalId!, input));
+      }
+      return roles;
     });
   // Create the AKS cluster
   cluster = new ManagedCluster(
@@ -95,7 +98,7 @@ export async function setup(input: AksInput): Promise<boolean> {
         enablePrivateCluster: true,
         enablePrivateClusterPublicFQDN: true,
         disableRunCommand: false,
-        privateDNSZone: input.privateDnsZoneId,
+        privateDNSZone: input.privateDnsZoneId ?? 'system',
       },
       autoScalerProfile: {
         scaleDownDelayAfterAdd: '15m',
@@ -103,11 +106,21 @@ export async function setup(input: AksInput): Promise<boolean> {
       },
       dnsPrefix: input.name,
       enableRBAC: true,
-      kubernetesVersion: '1.31',
+      kubernetesVersion: input.kubernetes_version ?? '1.31',
       publicNetworkAccess: 'Disabled',
       autoUpgradeProfile: {
         upgradeChannel: UpgradeChannel.Node_image,
       },
+      securityProfile: {
+        imageCleaner: {
+          enabled: true,
+          intervalHours: 24,
+        },
+        workloadIdentity: {
+          enabled: true,
+        },
+      },
+      tags: input.tags,
     },
     { dependsOn: neededRoles },
   );
@@ -158,7 +171,7 @@ function grantDNSContributorToIdentity(
         type: 'ServicePrincipal',
       },
       rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-      scope: input.privateDnsZoneId,
+      scope: input.privateDnsZoneId!,
       key: 'kubernetes',
       subscriptionId: input.subscriptionId,
     });
@@ -169,7 +182,7 @@ function grantDNSContributorToIdentity(
         type: 'ServicePrincipal',
       },
       rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
-      scope: input.privateDnsZoneId,
+      scope: input.privateDnsZoneId!,
       key: 'kubernetes',
       subscriptionId: input.subscriptionId,
     });
