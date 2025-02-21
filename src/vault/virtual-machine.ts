@@ -1,8 +1,23 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
-import { createCloudInitCustomData } from './cloud-init';
+import { createCloudInitWithTLS } from './cloud-init-tls-certificate';
+import { createCloudInitWithCertbot } from './cloud-init-certbot';
 import * as Kubernetes from './kubernetes-vault-setup';
 import { parse as parseYaml } from 'yaml';
+
+type certbot = {
+  cloudflareApiToken: string;
+  contactEmail: string;
+  fqdn: string;
+  isStaging: boolean;
+};
+
+type tlsCertificate = {
+  fqdn: string;
+  certificate: string;
+  issuer: string;
+  key: string;
+};
 
 type CreateVirtualMachine = {
   keyVault: azure_native.keyvault.Vault;
@@ -10,12 +25,7 @@ type CreateVirtualMachine = {
   subnetId?: string;
   subnet?: azure_native.network.Subnet;
   tenantId: string;
-  tls: {
-    cloudflareApiToken: string;
-    contactEmail: string;
-    fqdn: string;
-    isStaging: boolean;
-  };
+  tls: certbot | tlsCertificate;
   user: {
     password: pulumi.Output<string>;
     username: pulumi.Output<string>;
@@ -61,6 +71,43 @@ export async function createVirtualMachine(
       ],
     },
   );
+  const cloudInitData = isCertbot(input.tls)
+    ? createCloudInitWithCertbot({
+        ipAddress: networkInterface.ipConfigurations.apply(
+          (configurations) => configurations![0]!.privateIPAddress!,
+        ),
+        vaultFileStoragePath: '/opt/vault/data/',
+        keyVault: {
+          tenantId: input.tenantId,
+          name: input.keyVault.name,
+          secret_name: 'auto-unseal',
+          client_id: input.vaultIdentity.clientId,
+        },
+        tls: input.tls,
+        kubernetes: {
+          server: clusterServer,
+          caCert: clusterCaCert,
+          token: Kubernetes.token,
+        },
+      })
+    : createCloudInitWithTLS({
+        ipAddress: networkInterface.ipConfigurations.apply(
+          (configurations) => configurations![0]!.privateIPAddress!,
+        ),
+        vaultFileStoragePath: '/opt/vault/data/',
+        keyVault: {
+          tenantId: input.tenantId,
+          name: input.keyVault.name,
+          secret_name: 'auto-unseal',
+          client_id: input.vaultIdentity.clientId,
+        },
+        tls: input.tls,
+        kubernetes: {
+          server: clusterServer,
+          caCert: clusterCaCert,
+          token: Kubernetes.token,
+        },
+      });
   // Create VM
   const virtualMachine = new azure_native.compute.VirtualMachine(
     'vault-vm',
@@ -87,29 +134,7 @@ export async function createVirtualMachine(
         adminUsername: input.user.username,
         adminPassword: input.user.password,
         computerName: 'vault',
-        customData: createCloudInitCustomData({
-          ipAddress: networkInterface.ipConfigurations.apply(
-            (configurations) => configurations![0]!.privateIPAddress!,
-          ),
-          vaultFileStoragePath: '/opt/vault/data/',
-          keyVault: {
-            tenantId: input.tenantId,
-            name: input.keyVault.name,
-            secret_name: 'auto-unseal',
-            client_id: input.vaultIdentity.clientId,
-          },
-          tls: {
-            contactEmail: input.tls.contactEmail,
-            cloudflareApiToken: input.tls.cloudflareApiToken,
-            hostname: input.tls.fqdn,
-            staging: input.tls.isStaging,
-          },
-          kubernetes: {
-            server: clusterServer,
-            caCert: clusterCaCert,
-            token: Kubernetes.token,
-          },
-        }),
+        customData: cloudInitData,
         linuxConfiguration: {
           patchSettings: {
             patchMode: azure_native.compute.LinuxVMGuestPatchMode.ImageDefault,
@@ -153,4 +178,8 @@ export async function createVirtualMachine(
     },
   );
   return [virtualMachine, networkInterface];
+}
+
+function isCertbot(tls: certbot | tlsCertificate): tls is certbot {
+  return (tls as certbot).cloudflareApiToken !== undefined;
 }

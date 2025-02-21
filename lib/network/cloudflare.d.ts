@@ -6,9 +6,9 @@ export declare let subnet: Subnet | undefined;
 export declare let networkSecurityGroup: NetworkSecurityGroup | undefined;
 export declare let routeTable: RouteTable | undefined;
 export type CloudflareNetworkInput = {
-  resourceGroup: ResourceGroup;
-  virtualNetwork: VirtualNetwork;
-  subnetCidr: string;
+    resourceGroup: ResourceGroup;
+    virtualNetwork: VirtualNetwork;
+    subnetCidr: string;
 };
 export declare function setup(input: CloudflareNetworkInput): Promise<boolean>;
 //# sourceMappingURL=cloudflare.d.ts.map
