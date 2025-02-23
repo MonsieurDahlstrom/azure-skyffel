@@ -25,6 +25,20 @@ import * as AzureRoles from '../rbac/roles';
 import { createKeyVault } from './key-vault';
 import { createVirtualMachine } from './virtual-machine';
 
+export type certbot = {
+  cloudflareApiToken: string;
+  contactEmail: string;
+  fqdn: string;
+  isStaging: boolean;
+};
+
+export type tlsCertificate = {
+  fqdn: string;
+  certificate: string;
+  issuer: string;
+  key: string;
+};
+
 export type VaultInput = {
   subnetId?: string;
   subnet?: Subnet;
@@ -45,12 +59,7 @@ export type VaultInput = {
   vmSize: string;
   tenantId: string;
   subscriptionId: string;
-  tls: {
-    contactEmail: string;
-    cloudflareApiToken: string;
-    fqdn: string;
-    isStaging: boolean;
-  };
+  tls: certbot | tlsCertificate;
   kubeconfig: pulumi.Output<string>;
 };
 export let networkInterface: NetworkInterface;

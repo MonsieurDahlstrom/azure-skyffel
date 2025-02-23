@@ -54,8 +54,6 @@ pulumi.runtime.setMocks(
   false, // Sets the flag `dryRun`, which indicates if pulumi is running in preview mode.
 );
 
-
-
 describe('Vault', function () {
   let Vault: typeof import('./index');
   let NetworkCore: typeof import('../network/core-network');
@@ -88,7 +86,7 @@ describe('Vault', function () {
     let admin: { principalId: string; type: string };
     let dnsZone: azure_native.network.PrivateZone;
     let kubeconfig: pulumi.Output<string>;
-    beforeEach(async() => {
+    beforeEach(async () => {
       resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
         resourceGroupName: 'rg-test',
       });
@@ -190,7 +188,7 @@ describe('Vault', function () {
     let admin: { principalId: string; type: string };
     let dnsZone: azure_native.network.PrivateZone;
     let kubeconfig: pulumi.Output<string>;
-    beforeEach(async() => {
+    beforeEach(async () => {
       resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
         resourceGroupName: 'rg-test',
       });
@@ -247,7 +245,7 @@ describe('Vault', function () {
         vmSize: 'standard_b2s',
       };
     });
-    test('#virtualMachine is defined', async  () => {
+    test('#virtualMachine is defined', async () => {
       input.tls.isStaging = true;
       await Vault.setup(input);
       expect(Vault.virtualMachine).to.be.a('object');
@@ -267,9 +265,9 @@ describe('Vault', function () {
       await Vault.setup(input);
       expect(Vault.vaultIdentity).to.be.a('object');
     });
-    test('cloud-init has certbot configuration', async () => {     
+    test('cloud-init has certbot configuration', async () => {
       input.tls.isStaging = true;
-      await Vault.setup(input);   
+      await Vault.setup(input);
       Vault.virtualMachine.osProfile.customData.apply((customData) => {
         let cloudInitConfig = Buffer.from(customData, 'base64').toString();
         expect(cloudInitConfig).toContain(
@@ -296,7 +294,7 @@ describe('Vault', function () {
     let admin: { principalId: string; type: string };
     let dnsZone: azure_native.network.PrivateZone;
     let kubeconfig: pulumi.Output<string>;
-    beforeEach(async() => {
+    beforeEach(async () => {
       resourceGroup = new azure_native.resources.ResourceGroup('rg-test', {
         resourceGroupName: 'rg-test',
       });
@@ -369,12 +367,16 @@ describe('Vault', function () {
       await Vault.setup(input);
       expect(Vault.vaultIdentity).to.be.a('object');
     });
-    test('cloud-init has certbot configuration', async () => {     
-      await Vault.setup(input);   
+    test('cloud-init has certbot configuration', async () => {
+      await Vault.setup(input);
       Vault.virtualMachine.osProfile.customData.apply((customData) => {
         let cloudInitConfig = Buffer.from(customData, 'base64').toString();
-        expect(cloudInitConfig).toContain(`path: /opt/vault/tls/vault_fullchain.pem`);
-        expect(cloudInitConfig).toContain(`path: /opt/vault/tls/vault_privatekey.pem`);
+        expect(cloudInitConfig).toContain(
+          `path: /opt/vault/tls/vault_fullchain.pem`,
+        );
+        expect(cloudInitConfig).toContain(
+          `path: /opt/vault/tls/vault_privatekey.pem`,
+        );
       });
     });
   });

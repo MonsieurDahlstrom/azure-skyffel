@@ -4,20 +4,7 @@ import { createCloudInitWithTLS } from './cloud-init-tls-certificate';
 import { createCloudInitWithCertbot } from './cloud-init-certbot';
 import * as Kubernetes from './kubernetes-vault-setup';
 import { parse as parseYaml } from 'yaml';
-
-type certbot = {
-  cloudflareApiToken: string;
-  contactEmail: string;
-  fqdn: string;
-  isStaging: boolean;
-};
-
-type tlsCertificate = {
-  fqdn: string;
-  certificate: string;
-  issuer: string;
-  key: string;
-};
+import { certbot, tlsCertificate } from './index';
 
 type CreateVirtualMachine = {
   keyVault: azure_native.keyvault.Vault;
