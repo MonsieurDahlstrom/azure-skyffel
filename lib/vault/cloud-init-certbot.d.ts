@@ -1,4 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
+import { certbot } from './index';
 type CreateCloudInitCustomData = {
   ipAddress: pulumi.Output<string>;
   vaultFileStoragePath: string;
@@ -8,12 +9,7 @@ type CreateCloudInitCustomData = {
     secret_name: string;
     client_id: pulumi.Output<string>;
   };
-  tls: {
-    cloudflareApiToken: string;
-    contactEmail: string;
-    fqdn: string;
-    isStaging: boolean;
-  };
+  tls: certbot;
   kubernetes: {
     token: pulumi.Output<string>;
     server: pulumi.Output<string>;

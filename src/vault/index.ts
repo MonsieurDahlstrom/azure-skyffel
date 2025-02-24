@@ -33,10 +33,10 @@ export type certbot = {
 };
 
 export type tlsCertificate = {
-  fqdn: string;
-  certificate: string;
-  issuer: string;
-  key: string;
+  fqdn: string | pulumi.Output<string>;
+  certificate: string | pulumi.Output<string>;
+  issuer: string | pulumi.Output<string>;
+  key: string | pulumi.Output<string>;
 };
 
 export type VaultInput = {

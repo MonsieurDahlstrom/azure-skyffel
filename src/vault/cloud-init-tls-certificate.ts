@@ -1,5 +1,6 @@
 import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
+import { tlsCertificate } from './index';
 
 type CreateCloudInitCustomData = {
   ipAddress: pulumi.Output<string>;
@@ -10,12 +11,7 @@ type CreateCloudInitCustomData = {
     secret_name: string;
     client_id: pulumi.Output<string>;
   };
-  tls: {
-    fqdn: string;
-    certificate: string;
-    issuer: string;
-    key: string;
-  };
+  tls: tlsCertificate;
   kubernetes: {
     token: pulumi.Output<string>;
     server: pulumi.Output<string>;
