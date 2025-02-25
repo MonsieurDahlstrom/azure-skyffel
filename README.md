@@ -1,9 +1,11 @@
 # azure-skyffle
+
 WIP
 A typescript WIP collection to build azure and cloudflare infrastructure with [Pulumi](https://pulumi.com)
 
 AzureVnet
 Builds a vnet and subnets prepopulated with delegations.
+
 ```yaml
 config:
     azure-vnet:
@@ -27,6 +29,7 @@ config:
                 cidr: "10.0.1.0/24"
                 delegationType: None
 ```
+
 ```typescript
 import {AzureVnet} from "@monsieurdahlstrom/azure-skyffle"
 const network:Azurevnet.Layout = input.config.requireObject("azure-vnet");
@@ -50,21 +53,24 @@ await SpokeDNS.setup(`MonsieurDahlstrom/dns/production`, AzureVnet.virtualNetwor
 
 Cloudflare
 Builds a VM in designated subnet and establish a tunnel to cloudflare with route setup to the vnet address space
+
 ```typescript
-import {Cloudflared} from "@monsieurdahlstrom/azure-skyffle"
+import { Cloudflared } from '@monsieurdahlstrom/azure-skyffle';
 
 await Cloudflared.setup({
-    user: {
-        username: cloudflareVmUsername,
-        password: cloudflareVmPassword,
-    },
-    routeCidr: AzureVnet.virtualNetwork.addressSpace!.apply(space => space!.addressPrefixes![0]),
-    subnetId: AzureVnet.subnets.get('dmz')!.id,
-    resourceGroup,
-    cloudflare: {
-        zone: config.require("cloudflare-zone-id"),
-        account: config.require("cloudflare-account-id"),
-    },
-    vmSize: "Standard_B2s",
+  user: {
+    username: cloudflareVmUsername,
+    password: cloudflareVmPassword,
+  },
+  routeCidr: AzureVnet.virtualNetwork.addressSpace!.apply(
+    (space) => space!.addressPrefixes![0],
+  ),
+  subnetId: AzureVnet.subnets.get('dmz')!.id,
+  resourceGroup,
+  cloudflare: {
+    zone: config.require('cloudflare-zone-id'),
+    account: config.require('cloudflare-account-id'),
+  },
+  vmSize: 'Standard_B2s',
 });
 ```

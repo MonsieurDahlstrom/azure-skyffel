@@ -8,9 +8,9 @@ export enum Delegation {
 export interface Layout {
   name: string;
   layout: {
-    cidr:string, 
-    subnets:{name:string, cidr:string, delegationType:Delegation}[]
-  }
+    cidr: string;
+    subnets: { name: string; cidr: string; delegationType: string }[];
+  };
 }
 
 export interface SubnetArgs extends azure.network.SubnetArgs {
