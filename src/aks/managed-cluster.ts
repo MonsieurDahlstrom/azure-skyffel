@@ -134,7 +134,7 @@ export async function setup(input: AksInput): Promise<boolean> {
     resourceName: cluster.name,
   });
   acns = new UpdateResource(`${input.name}-acns`, {
-    resourceId: cluster.id.apply((id) => id.toLowerCase()),
+    resourceId: cluster.id,
     type: 'Microsoft.ContainerService/managedClusters@2024-10-01',
     body: JSON.stringify({
       properties: {
