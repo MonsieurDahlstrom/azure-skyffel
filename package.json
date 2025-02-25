@@ -1,7 +1,7 @@
 {
-  "name": "@monsieurdahlstrom/pulumi-azure",
+  "name": "@monsieurdahlstrom/azure-skyffel",
   "version": "0.1.0",
-  "description": "opinionated pulumi library to generate common azure resources",
+  "description": "a typescript lib for building azure and cloudflare infrastructure with pulumi",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "type": "commonjs",
@@ -13,29 +13,30 @@
     "check-exports": "attw --pack . ",
     "test": "vitest run"
   },
-  "repository": "https://github.com/monsieurdahlstrom/pulumi-azure.git",
+  "repository": "https://github.com/monsieurdahlstrom/azure-skyffel.git",
   "keywords": [
     "pulumi",
     "azure",
+    "cloudflare",
     "iac"
   ],
   "publishConfig": {
     "@monsieurdahlstrom:registry": "https://npm.pkg.github.com"
   },
   "author": "Mathias Dahlström",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MonsieurDahlstrom/pulumi-azure/issues"
+    "url": "https://github.com/MonsieurDahlstrom/azure-skyffel/issues"
   },
-  "homepage": "https://github.com/MonsieurDahlstrom/pulumi-azure#readme",
+  "homepage": "https://github.com/MonsieurDahlstrom/azure-skyffel#readme",
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.3",
+    "@arethetypeswrong/cli": "^0.17.4",
     "@types/jsbn": "^1.2.33",
-    "@types/node": "^22.13.4",
-    "prettier": "^3.5.1",
+    "@types/node": "^22.13.5",
+    "prettier": "^3.5.2",
     "semantic-release": "^24.2.3",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.6"
+    "vitest": "^3.0.7"
   },
   "release": {
     "branches": [

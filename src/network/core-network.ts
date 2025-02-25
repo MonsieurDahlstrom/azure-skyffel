@@ -1,5 +1,22 @@
 import * as azure from '@pulumi/azure-native';
 
+export enum Delegation {
+  None = 0,
+  GithubRunner,
+  PrivateDNSResovler,
+}
+export interface Layout {
+  name: string;
+  layout: {
+    cidr:string, 
+    subnets:{name:string, cidr:string, delegationType:Delegation}[]
+  }
+}
+
+export interface SubnetArgs extends azure.network.SubnetArgs {
+  delegationType?: Delegation;
+}
+
 export let virtualNetwork: azure.network.VirtualNetwork;
 export let subnets: Map<string, azure.network.Subnet> = new Map();
 
@@ -20,18 +37,10 @@ export function setupNetwork(
   });
 }
 
-export enum MDSubbnetDelegation {
-  None = 0,
-  GithubRunner,
-  PrivateDNSResovler,
-}
-export interface MDSubnetArgs extends azure.network.SubnetArgs {
-  delegationType?: MDSubbnetDelegation;
-}
-export function setupSubnets(snets: Map<string, MDSubnetArgs>) {
+export function setupSubnets(snets: Map<string, SubnetArgs>) {
   for (const [key, value] of snets) {
     switch (value.delegationType) {
-      case MDSubbnetDelegation.GithubRunner:
+      case Delegation.GithubRunner:
         value.delegations = [
           {
             name: 'github-network-settings',
@@ -40,7 +49,7 @@ export function setupSubnets(snets: Map<string, MDSubnetArgs>) {
           },
         ];
         break;
-      case MDSubbnetDelegation.PrivateDNSResovler:
+      case Delegation.PrivateDNSResovler:
         value.delegations = [
           {
             name: 'Microsoft.Network.dnsResolvers',

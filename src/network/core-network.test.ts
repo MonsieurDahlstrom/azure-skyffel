@@ -56,7 +56,7 @@ describe('setupSubnets', () => {
       addressPrefix: '10.0.0.0/25',
       virtualNetworkName: NetworkCore.virtualNetwork.name,
       resourceGroupName: resourceGroup.name,
-      delegationType: NetworkCore.MDSubbnetDelegation.GithubRunner,
+      delegationType: NetworkCore.Delegation.GithubRunner,
     });
     NetworkCore.setupSubnets(snets);
     expect(NetworkCore.subnets.size).toBe(1);
