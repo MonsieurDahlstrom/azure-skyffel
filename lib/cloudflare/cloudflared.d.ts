@@ -1,4 +1,5 @@
 import * as pulumi from '@pulumi/pulumi';
+import * as cloudflare from '@pulumi/cloudflare';
 import { NetworkInterface } from '@pulumi/azure-native/network';
 import { VirtualMachine } from '@pulumi/azure-native/compute';
 import { ResourceGroup } from '@pulumi/azure-native/resources';
@@ -10,11 +11,12 @@ export type CloudflaredInput = {
     password: pulumi.Output<string>;
   };
   routeCidr: string | pulumi.Output<string>;
+  ingresses: cloudflare.types.input.ZeroTrustTunnelCloudflaredConfigConfigIngressRule[];
   cloudflare: {
     account: string;
     zone?: string;
   };
-  subnetId?: string | pulumi.Output<string>;
+  subnetId: string | pulumi.Output<string>;
   resourceGroup: ResourceGroup;
   vmSize: string;
 };

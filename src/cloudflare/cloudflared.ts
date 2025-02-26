@@ -30,11 +30,12 @@ export type CloudflaredInput = {
     password: pulumi.Output<string>;
   };
   routeCidr: string | pulumi.Output<string>;
+  ingresses: cloudflare.types.input.ZeroTrustTunnelCloudflaredConfigConfigIngressRule[];
   cloudflare: {
     account: string;
     zone?: string;
   };
-  subnetId?: string | pulumi.Output<string>;
+  subnetId: string | pulumi.Output<string>;
   resourceGroup: ResourceGroup;
   vmSize: string;
 };
@@ -50,6 +51,21 @@ export async function setup(input: CloudflaredInput): Promise<boolean> {
     secret: tunnelSecretValue,
     configSrc: 'cloudflare',
   });
+  const vnetTunnelConfiguration =
+    -new cloudflare.ZeroTrustTunnelCloudflaredConfig(
+      'vnet-tunnel-configuration',
+      {
+        accountId: input.cloudflare.account,
+        tunnelId: vnetTunnel.id,
+        config: {
+          warpRouting: {
+            enabled: true,
+          },
+          ingressRules: input.ingresses,
+        },
+      },
+    );
+
   const vnetTunnelToken = await GetValue(vnetTunnel.tunnelToken);
   const vnetRoute = new cloudflare.ZeroTrustTunnelRoute('vnet-route', {
     accountId: input.cloudflare.account,
