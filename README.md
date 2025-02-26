@@ -2,10 +2,7 @@
 
 WIP
 A typescript WIP collection to build azure and cloudflare infrastructure with [Pulumi](https://pulumi.com)
-
-AzureVnet
-Builds a vnet and subnets prepopulated with delegations.
-
+The sketches below expects a pulumi stack configured with cloudflare and azure-native providers via ESC. With the following configuration key set:
 ```yaml
 config:
     azure-vnet:
@@ -29,48 +26,53 @@ config:
                 cidr: "10.0.1.0/24"
                 delegationType: None
 ```
-
+## AzureVnet
+Builds vnet and subnets following the yaml specification above. Delegation type can be None, GithubRunner, PrivateDNSResovler.
 ```typescript
 import {AzureVnet} from "@monsieurdahlstrom/azure-skyffle"
-const network:Azurevnet.Layout = input.config.requireObject("azure-vnet");
-// create virtual network
-AzureVnet.setupNetwork (input.resourceGroup, `vnet-${network.name)}`, network.layout.cidr);
-//define subnets
-const subnetLayout = new Map<string, AzureVnet.SubnetArgs>();
-const network.layout.subnets.forEach((element) => {
-    subnetTopology.set(element.name, {
-        resourceGroupName: input.resourceGroup.name,
-        virtualNetworkName: AzureVnet.virtualNetwork.name,
-        addressPrefix: element.cidr,
-        delegationType: AzureVnet.Delegation[element.delegationType as keyof typeof AzureVnet.Delegation],
-    });
-})
-//create subnets
-AzureVnet.setupSubnets(subnetTopology);
-//retrive dns hub zones and link them if needed\
-await SpokeDNS.setup(`MonsieurDahlstrom/dns/production`, AzureVnet.virtualNetwork);
+import * as azure_native from "@pulumi/azure-native";
+
+export = async () => {
+  const resourceGroup = new azure_native.resources.ResourceGroup(`rg-demo`);    // load network stack
+  //load network layout
+  const network:Azurevnet.Layout = input.config.requireObject("azure-vnet");
+  // create virtual network
+  await AzureVnet.setup({...network, resourceGroup});
+}
 ```
 
-Cloudflare
+## Cloudflare
 Builds a VM in designated subnet and establish a tunnel to cloudflare with route setup to the vnet address space
 
 ```typescript
-import { Cloudflared } from '@monsieurdahlstrom/azure-skyffle';
+import { Cloudflared, AzureVnet } from '@monsieurdahlstrom/azure-skyffle';
+import * as azure_native from "@pulumi/azure-native";
 
-await Cloudflared.setup({
-  user: {
-    username: cloudflareVmUsername,
-    password: cloudflareVmPassword,
-  },
-  routeCidr: AzureVnet.virtualNetwork.addressSpace!.apply(
-    (space) => space!.addressPrefixes![0],
-  ),
-  subnetId: AzureVnet.subnets.get('dmz')!.id,
-  resourceGroup,
-  cloudflare: {
-    zone: config.require('cloudflare-zone-id'),
-    account: config.require('cloudflare-account-id'),
-  },
-  vmSize: 'Standard_B2s',
-});
+export = async () => {
+  const resourceGroup = new azure_native.resources.ResourceGroup(`rg-demo`);    // load network stack
+  //load network layout
+  const network:Azurevnet.Layout = input.config.requireObject("azure-vnet");
+  // create virtual network
+  await AzureVnet.setup({...network, resourceGroup});
+
+  await Cloudflared.setup({
+    user: {
+      username: cloudflareVmUsername,
+      password: cloudflareVmPassword,
+    },
+    routeCidr: AzureVnet.virtualNetwork.addressSpace!.apply(
+      (space) => space!.addressPrefixes![0],
+    ),
+    subnetId: AzureVnet.subnets.get('dmz')!.id,
+    resourceGroup,
+    ingresses: [
+      {service: "http_status:404"}
+    ],
+    cloudflare: {
+      zone: config.require('cloudflare-zone-id'),
+      account: config.require('cloudflare-account-id'),
+    },
+    vmSize: 'Standard_B2s',
+  });
+}
 ```
