@@ -16,6 +16,6 @@ export declare function createRecordSet(input: {
   recordType: string;
   host: string;
   ipv4Address: string | pulumi.Output<string>;
-  resourceGroupName: string;
+  resourceGroupName: string | pulumi.Output<string>;
 }): azure_native.network.PrivateRecordSet;
 //# sourceMappingURL=spoke-dns.d.ts.map

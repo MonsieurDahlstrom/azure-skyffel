@@ -48,7 +48,7 @@ export function createRecordSet(input: {
   recordType: string;
   host: string;
   ipv4Address: string | pulumi.Output<string>;
-  resourceGroupName: string;
+  resourceGroupName: string | pulumi.Output<string>;
 }): azure_native.network.PrivateRecordSet {
   return new azure_native.network.PrivateRecordSet(
     `arecord-${input.host}-${input.zone.name.replace('.', '-')}`,
