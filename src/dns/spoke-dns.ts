@@ -4,18 +4,16 @@ import * as azure_native from '@pulumi/azure-native';
 export let zones: Map<string, azure_native.network.GetPrivateZoneResult> =
   new Map();
 
-let stack: pulumi.StackReference;
 let provider: azure_native.Provider;
 let subscriptionId: string;
 
 export async function setup(
-  stackLocation: string,
+  stack: pulumi.StackReference,
   stackAzureSubscription: string,
   network:
     | azure_native.network.GetVirtualNetworkResult
     | azure_native.network.VirtualNetwork,
 ) {
-  stack = new pulumi.StackReference(stackLocation);
   provider = new azure_native.Provider('provider', {
     subscriptionId: stackAzureSubscription,
   });

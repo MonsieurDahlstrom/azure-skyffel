@@ -5,7 +5,7 @@ export declare let zones: Map<
   azure_native.network.GetPrivateZoneResult
 >;
 export declare function setup(
-  stackLocation: string,
+  stack: pulumi.StackReference,
   stackAzureSubscription: string,
   network:
     | azure_native.network.GetVirtualNetworkResult
