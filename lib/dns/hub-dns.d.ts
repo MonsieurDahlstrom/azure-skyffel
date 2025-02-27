@@ -12,9 +12,15 @@ type SetupInput = {
   dnsZoneRoleAdministrators?: PrivateDnsZoneContributorIdentity[];
   subscriptionId?: string;
   stack?: pulumi.StackReference;
-  zones?: Map<string, pulumi.Output<string>>;
+  zones?: Map<string, string | pulumi.Output<string>>;
 };
 export declare function setup(input: SetupInput): Promise<boolean>;
+export declare function outputs(): {
+  dnsZones: {
+    resourceGroupName: pulumi.Output<string>;
+    name: pulumi.Output<string>;
+  }[];
+};
 export declare function createAddressEntry(input: {
   ipAddress: string;
   name: string;

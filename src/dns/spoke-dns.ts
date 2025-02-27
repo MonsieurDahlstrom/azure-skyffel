@@ -4,22 +4,20 @@ import * as azure_native from '@pulumi/azure-native';
 export let zones: Map<string, azure_native.network.GetPrivateZoneResult> =
   new Map();
 
-let resourceGroupName: string;
 let stack: pulumi.StackReference;
 let provider: azure_native.Provider;
 let subscriptionId: string;
 
 export async function setup(
   stackLocation: string,
+  stackAzureSubscription: string,
   network:
     | azure_native.network.GetVirtualNetworkResult
     | azure_native.network.VirtualNetwork,
 ) {
   stack = new pulumi.StackReference(stackLocation);
-  resourceGroupName = await stack.getOutputValue('resourceGroupName');
-  subscriptionId = await stack.getOutputValue('subscriptionId');
   provider = new azure_native.Provider('provider', {
-    subscriptionId,
+    subscriptionId: stackAzureSubscription,
   });
   const zonesData: { resourceGroupName: string; name: string }[] =
     await stack.getOutputValue('dnsZones');
@@ -27,7 +25,7 @@ export async function setup(
   const getPrivateZonePromises = zonesData.map(async (zoneData) => {
     const zone = await azure_native.network.getPrivateZone(
       {
-        resourceGroupName,
+        resourceGroupName: zoneData.resourceGroupName,
         privateZoneName: zoneData.name,
       },
       {
@@ -52,6 +50,7 @@ export function createRecordSet(input: {
   recordType: string;
   host: string;
   ipv4Address: string | pulumi.Output<string>;
+  resourceGroupName: string;
 }): azure_native.network.PrivateRecordSet {
   return new azure_native.network.PrivateRecordSet(
     `arecord-${input.host}-${input.zone.name.replace('.', '-')}`,
@@ -64,7 +63,7 @@ export function createRecordSet(input: {
       privateZoneName: input.zone.name!,
       recordType: input.recordType,
       relativeRecordSetName: input.host,
-      resourceGroupName,
+      resourceGroupName: input.resourceGroupName,
       ttl: 3600,
     },
     {

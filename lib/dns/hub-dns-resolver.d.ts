@@ -1,3 +1,4 @@
+import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
 export declare let resolver: azure_native.network.DnsResolver;
 export declare let inboundEndpoint: azure_native.network.InboundEndpoint;
@@ -7,5 +8,8 @@ type PrivateResolverInput = {
   subnet: azure_native.network.Subnet;
 };
 export declare function setup(input: PrivateResolverInput): Promise<boolean>;
+export declare function outputs(): {
+  dnsResolverIp: pulumi.Output<string>;
+};
 export {};
 //# sourceMappingURL=hub-dns-resolver.d.ts.map

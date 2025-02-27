@@ -3,6 +3,7 @@ import * as azure_native from '@pulumi/azure-native';
 import * as AzureRoles from '../rbac/roles';
 
 export const zones: Map<string, azure_native.network.PrivateZone> = new Map();
+let resourceGroup: azure_native.resources.ResourceGroup;
 
 type PrivateDnsZoneContributorIdentity = {
   id: string;
@@ -16,14 +17,15 @@ type SetupInput = {
   dnsZoneRoleAdministrators?: PrivateDnsZoneContributorIdentity[];
   subscriptionId?: string;
   stack?: pulumi.StackReference;
-  zones?: Map<string, pulumi.Output<string>>;
+  zones?: Map<string, string | pulumi.Output<string>>;
 };
 export async function setup(input: SetupInput): Promise<boolean> {
+  resourceGroup = input.resourceGroup;
   input.zones!.forEach(async (zone, key) => {
     await createPrivateDnsZone({
       key,
       zone,
-      resourceGroup: input.resourceGroup,
+      resourceGroup,
       network: input.network,
       dnsZoneContributors: input.dnsZoneContributors,
       dnsZoneRoleAdministrators: input.dnsZoneRoleAdministrators,
@@ -33,9 +35,28 @@ export async function setup(input: SetupInput): Promise<boolean> {
   return true;
 }
 
+export function outputs(): {
+  dnsZones: {
+    resourceGroupName: pulumi.Output<string>;
+    name: pulumi.Output<string>;
+  }[];
+} {
+  let dnsZoneOutputs: {
+    resourceGroupName: pulumi.Output<string>;
+    name: pulumi.Output<string>;
+  }[] = [];
+  zones.forEach((value, key, map) => {
+    dnsZoneOutputs.push({
+      resourceGroupName: resourceGroup.name,
+      name: value.name,
+    });
+  });
+  return { dnsZones: dnsZoneOutputs };
+}
+
 type CreatePrivateDnsZoneInput = {
   key: string;
-  zone: pulumi.Output<string>;
+  zone: string | pulumi.Output<string>;
   resourceGroup: azure_native.resources.ResourceGroup;
   network: azure_native.network.VirtualNetwork;
   dnsZoneContributors?: PrivateDnsZoneContributorIdentity[];

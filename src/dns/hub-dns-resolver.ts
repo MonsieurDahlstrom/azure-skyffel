@@ -40,3 +40,11 @@ export async function setup(input: PrivateResolverInput): Promise<boolean> {
   );
   return true;
 }
+
+export function outputs(): { dnsResolverIp: pulumi.Output<string> } {
+  return {
+    dnsResolverIp: inboundEndpoint.ipConfigurations.apply(
+      (configs) => configs[0]!.privateIpAddress!,
+    ),
+  };
+}

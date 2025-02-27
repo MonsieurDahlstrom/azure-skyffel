@@ -85,5 +85,12 @@ describe('HubDNSResolver', function () {
         azure_native.network.InboundEndpoint,
       );
     });
+    test('has output after setup', async () => {
+      await HubDNSResolver.setup(input);
+      expect(HubDNSResolver.outputs).toBeTypeOf('function');
+      const outputs = HubDNSResolver.outputs();
+      expect(outputs).toHaveProperty('dnsResolverIp');
+      expect(outputs.dnsResolverIp).toBeInstanceOf(pulumi.Output);
+    });
   });
 });
