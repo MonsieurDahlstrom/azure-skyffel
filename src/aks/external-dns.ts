@@ -66,12 +66,11 @@ export function setup(input: ExternalDnsArgs): void {
       'federatedIdentityCredential',
       {
         audiences: ['api://AzureADTokenExchange'],
-        federatedIdentityCredentialResourceName: identity.name,
         issuer: input.cluster.oidcIssuerProfile.apply(
           (oidcIssuerProfile) => oidcIssuerProfile!.issuerURL,
         ),
         resourceGroupName: input.resourceGroupName,
-        resourceName: input.cluster.name,
+        resourceName: identity.name,
         subject: 'system:serviceaccount:external-dns:external-dns',
       },
       { dependsOn: roles },
