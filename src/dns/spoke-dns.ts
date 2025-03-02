@@ -6,6 +6,8 @@ export let zones: Map<string, azure_native.network.GetPrivateZoneResult> =
 
 let provider: azure_native.Provider;
 let subscriptionId: string;
+let zoneResourceGroupName: Map<string, string | pulumi.Output<string>> =
+  new Map();
 
 export async function setup(
   stack: pulumi.StackReference,
@@ -31,6 +33,7 @@ export async function setup(
       },
     );
     zones.set(zoneData.name, zone);
+    zoneResourceGroupName.set(zoneData.name, zoneData.resourceGroupName);
   });
   await Promise.all(getPrivateZonePromises);
   //get the links
@@ -48,7 +51,6 @@ export function createRecordSet(input: {
   recordType: string;
   host: string;
   ipv4Address: string | pulumi.Output<string>;
-  resourceGroupName: string | pulumi.Output<string>;
 }): azure_native.network.PrivateRecordSet {
   return new azure_native.network.PrivateRecordSet(
     `arecord-${input.host}-${input.zone.name.replace('.', '-')}`,
@@ -61,7 +63,7 @@ export function createRecordSet(input: {
       privateZoneName: input.zone.name!,
       recordType: input.recordType,
       relativeRecordSetName: input.host,
-      resourceGroupName: input.resourceGroupName,
+      resourceGroupName: zoneResourceGroupName.get(input.zone.name)!,
       ttl: 3600,
     },
     {
