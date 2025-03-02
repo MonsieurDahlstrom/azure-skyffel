@@ -19,7 +19,7 @@ export type ExternalDnsArgs = {
 
 export function setup(input: ExternalDnsArgs): void {
   identity = new azure_native.managedidentity.UserAssignedIdentity(
-    `identity-external-dns}`,
+    `identity-external-dns`,
     {
       resourceGroupName: input.resourceGroupName,
     },
