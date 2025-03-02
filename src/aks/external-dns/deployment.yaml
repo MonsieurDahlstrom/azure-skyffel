@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: externaldns
+spec:
+  selector:
+    matchLabels:
+      app: externaldns
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: externaldns
+        azure.workload.identity/use: 'true'
+    spec:
+      serviceAccountName: externaldns
+      containers:
+        - name: externaldns
+          image: hxdspcicdacr.azurecr.io/external-dns:v0.14.2
+          args:
+            - --source=gateway-httproute
+            - --source=gateway-tlsroute
+            - --provider=azure-private-dns
+          volumeMounts:
+            - name: azure-config-file
+              mountPath: /etc/kubernetes
+              readOnly: true
+      volumes:
+        - name: azure-config-file
+          secret:
+            secretName: external-dns-azure
