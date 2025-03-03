@@ -163,13 +163,7 @@ export function setup(input: ExternalDnsArgs): void {
     { provider: input.provider },
   );
 
-  const azureCredentials = JSON.stringify({
-    tenantId: input.tenantId,
-    subscriptionId: input.subscriptionId,
-    resourceGroup: input.resourceGroupName,
-    useWorkloadIdentityExtension: true,
-  });
-
+  const azureCredentials = pulumi.interpolate`{ "tenantId": "${input.tenantId}", "subscriptionId": "${input.subscriptionId}", "resourceGroup":"${input.resourceGroupName}", "useWorkloadIdentityExtension": true}`;
   const secret = new kubernetes.core.v1.Secret(
     'external-dns-secret',
     {
@@ -178,7 +172,9 @@ export function setup(input: ExternalDnsArgs): void {
         namespace: ns.metadata.name,
       },
       data: {
-        'azure.json': Buffer.from(azureCredentials).toString('base64'),
+        'azure.json': azureCredentials.apply((res) =>
+          Buffer.from(res).toString('base64'),
+        ),
       },
     },
     { provider: input.provider },
