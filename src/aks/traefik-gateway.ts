@@ -114,7 +114,9 @@ export function setup(input: TraefikGatewayArgs): void {
             port: 8000,
             hostname: input.hostname,
             allowedRoutes: {
-              namespaces: 'All',
+              namespaces: {
+                from: 'All',
+              },
             },
           },
           {
@@ -123,13 +125,19 @@ export function setup(input: TraefikGatewayArgs): void {
             port: 8443,
             tls: {
               mode: 'Terminate',
-              certificateRefs: {
-                secretName: tlsSecret.metadata.name,
-              },
+              certificateRefs: [
+                {
+                  kind: 'Secret',
+                  group: '',
+                  name: tlsSecret.metadata.name,
+                },
+              ],
             },
             hostname: input.hostname,
             allowedRoutes: {
-              namespaces: 'All',
+              namespaces: {
+                from: 'All',
+              },
             },
           },
         ],
