@@ -11,11 +11,14 @@ export type ExternalDnsArgs = {
   resourceGroupName: string | pulumi.Output<string>;
   tenantId: string;
   subscriptionId: string;
-  zonesResourceGroupName: string;
-  zones: (
-    | azure_native.network.GetPrivateZoneResult
-    | azure_native.network.PrivateZone
-  )[];
+  zoneData: {
+    subscriptionId: string;
+    resourceGroupName: string;
+    zones: (
+      | azure_native.network.PrivateZone
+      | azure_native.network.GetPrivateZoneResult
+    )[];
+  };
   version?: string;
   cluster: azure_native.containerservice.ManagedCluster;
   provider: kubernetes.Provider;
@@ -33,7 +36,7 @@ export function setup(input: ExternalDnsArgs): void {
     | azure_native.authorization.RoleAssignment
   )[] = [];
   identity.principalId.apply((principalId) => {
-    input.zones.map((zone) => {
+    input.zoneData.zones.map((zone) => {
       if (typeof zone.id === 'string') {
         roles.push(
           AzureRoles.assignRole({
@@ -44,7 +47,7 @@ export function setup(input: ExternalDnsArgs): void {
             rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
             scope: zone.id,
             key: 'external-dns',
-            subscriptionId: input.subscriptionId,
+            subscriptionId: input.zoneData.subscriptionId,
           }),
         );
       } else {
@@ -57,7 +60,7 @@ export function setup(input: ExternalDnsArgs): void {
             rbacRole: AzureRoles.RoleUUID.PrivateDNSZoneContributor,
             scope: zone.id,
             key: 'external-dns',
-            subscriptionId: input.subscriptionId,
+            subscriptionId: input.zoneData.subscriptionId,
           }),
         );
       }
@@ -164,7 +167,7 @@ export function setup(input: ExternalDnsArgs): void {
     { provider: input.provider },
   );
 
-  const azureCredentials = pulumi.interpolate`{ "tenantId": "${input.tenantId}", "subscriptionId": "${input.subscriptionId}", "resourceGroup":"${input.zonesResourceGroupName}", "useWorkloadIdentityExtension": true}`;
+  const azureCredentials = pulumi.interpolate`{ "tenantId": "${input.tenantId}", "subscriptionId": "${input.zoneData.subscriptionId}", "resourceGroup":"${input.zoneData.resourceGroupName}", "useWorkloadIdentityExtension": true}`;
   const secret = new kubernetes.core.v1.Secret(
     'external-dns-secret',
     {
@@ -211,7 +214,9 @@ export function setup(input: ExternalDnsArgs): void {
                 args: [
                   '--source=gateway-httproute',
                   '--provider=azure-private-dns',
-                  ...input.zones.map((zone) => `--domain-filter=${zone.name}`),
+                  ...input.zoneData.zones.map(
+                    (zone) => `--domain-filter=${zone.name}`,
+                  ),
                 ],
                 volumeMounts: [
                   {

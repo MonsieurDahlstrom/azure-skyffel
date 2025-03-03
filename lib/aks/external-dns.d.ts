@@ -7,11 +7,14 @@ export type ExternalDnsArgs = {
   resourceGroupName: string | pulumi.Output<string>;
   tenantId: string;
   subscriptionId: string;
-  zonesResourceGroupName: string;
-  zones: (
-    | azure_native.network.GetPrivateZoneResult
-    | azure_native.network.PrivateZone
-  )[];
+  zoneData: {
+    subscriptionId: string;
+    resourceGroupName: string;
+    zones: (
+      | azure_native.network.PrivateZone
+      | azure_native.network.GetPrivateZoneResult
+    )[];
+  };
   version?: string;
   cluster: azure_native.containerservice.ManagedCluster;
   provider: kubernetes.Provider;
