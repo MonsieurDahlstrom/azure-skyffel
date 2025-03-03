@@ -167,7 +167,7 @@ export function setup(input: ExternalDnsArgs): void {
     tenantId: input.tenantId,
     subscriptionId: input.subscriptionId,
     resourceGroup: input.resourceGroupName,
-    useWorkloadIdentityExtension: 'true',
+    useWorkloadIdentityExtension: true,
   });
 
   const secret = new kubernetes.core.v1.Secret(
