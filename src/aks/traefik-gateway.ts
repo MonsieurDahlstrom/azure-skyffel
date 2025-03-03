@@ -65,7 +65,7 @@ export function setup(input: TraefikGatewayArgs): void {
           },
           kubernetesGateway: {
             enabled: true,
-            experimentalChannel: true,
+            experimentalChannel: false,
           },
         },
       },
