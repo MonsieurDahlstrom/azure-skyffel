@@ -7,6 +7,7 @@ export type ExternalDnsArgs = {
   resourceGroupName: string | pulumi.Output<string>;
   tenantId: string;
   subscriptionId: string;
+  zonesResourceGroupName: string;
   zones: (
     | azure_native.network.GetPrivateZoneResult
     | azure_native.network.PrivateZone

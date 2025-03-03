@@ -11,6 +11,7 @@ export type ExternalDnsArgs = {
   resourceGroupName: string | pulumi.Output<string>;
   tenantId: string;
   subscriptionId: string;
+  zonesResourceGroupName: string;
   zones: (
     | azure_native.network.GetPrivateZoneResult
     | azure_native.network.PrivateZone
@@ -163,7 +164,7 @@ export function setup(input: ExternalDnsArgs): void {
     { provider: input.provider },
   );
 
-  const azureCredentials = pulumi.interpolate`{ "tenantId": "${input.tenantId}", "subscriptionId": "${input.subscriptionId}", "resourceGroup":"${input.resourceGroupName}", "useWorkloadIdentityExtension": true}`;
+  const azureCredentials = pulumi.interpolate`{ "tenantId": "${input.tenantId}", "subscriptionId": "${input.subscriptionId}", "resourceGroup":"${input.zonesResourceGroupName}", "useWorkloadIdentityExtension": true}`;
   const secret = new kubernetes.core.v1.Secret(
     'external-dns-secret',
     {
@@ -208,10 +209,9 @@ export function setup(input: ExternalDnsArgs): void {
                 name: 'external-dns',
                 image: `k8s.gcr.io/external-dns/external-dns:v${input.version ? input.version : '0.15.1'}`,
                 args: [
-                  '--source=service',
-                  '--source=ingress',
                   '--source=gateway-httproute',
                   '--provider=azure-private-dns',
+                  ...input.zones.map((zone) => `--domain-filter=${zone.name}`),
                 ],
                 volumeMounts: [
                   {
