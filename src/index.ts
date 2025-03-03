@@ -8,6 +8,7 @@ export * as Vault from './vault';
 
 export * as AzureKubernetes from './aks/managed-cluster';
 export * as ExternalDNS from './aks/external-dns';
+export * as TraefikGateway from './aks/traefik-gateway';
 
 export * as AzureKeyVault from './kms/azure-key-vault';
 export * as AzureRoles from './rbac/roles';
