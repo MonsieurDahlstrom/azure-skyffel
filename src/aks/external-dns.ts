@@ -215,7 +215,6 @@ export function setup(input: ExternalDnsArgs): void {
                   '--source=service',
                   '--source=ingress',
                   '--source=gateway-httproute',
-                  '--source=gateway-tlsroute',
                   '--provider=azure-private-dns',
                 ],
                 volumeMounts: [
