@@ -23,12 +23,22 @@ export function setup(input: TraefikGatewayArgs): void {
     ),
     enableServerSideApply: true,
   });
+  const ns = new kubernetes.core.v1.Namespace(
+    'traefik',
+    {
+      metadata: {
+        name: 'traefik',
+      },
+    },
+    { provider },
+  );
   chart = new k8s.helm.v3.Chart(
     'traefik',
     {
       repo: 'traefik',
       chart: 'traefik',
       version: input.version ? input.version : '34.4.0',
+      namespace: ns.metadata.name,
       fetchOpts: {
         repo: 'https://traefik.github.io/charts',
       },
@@ -40,6 +50,6 @@ export function setup(input: TraefikGatewayArgs): void {
         },
       },
     },
-    { provider: provider },
+    { provider },
   );
 }
