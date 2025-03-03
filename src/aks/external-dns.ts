@@ -115,7 +115,7 @@ export function setup(input: ExternalDnsArgs): void {
           verbs: ['get', 'watch', 'list'],
         },
         {
-          apiGroups: ['extensions', 'networking.k8s.io'],
+          apiGroups: ['networking', 'networking.k8s.io'],
           resources: ['ingresses'], // for ingress
           verbs: ['get', 'watch', 'list'],
         },
