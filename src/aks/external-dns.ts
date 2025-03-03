@@ -15,8 +15,9 @@ export type ExternalDnsArgs = {
     | azure_native.network.GetPrivateZoneResult
     | azure_native.network.PrivateZone
   )[];
-  cluster: azure_native.containerservice.ManagedCluster;
   version?: string;
+  cluster: azure_native.containerservice.ManagedCluster;
+  provider: kubernetes.Provider;
 };
 
 export function setup(input: ExternalDnsArgs): void {
@@ -76,18 +77,6 @@ export function setup(input: ExternalDnsArgs): void {
       },
       { dependsOn: roles },
     );
-  // create a provider
-  const adminCredentials =
-    azure_native.containerservice.listManagedClusterAdminCredentialsOutput({
-      resourceGroupName: input.resourceGroupName,
-      resourceName: input.cluster.name,
-    });
-  const provider = new kubernetes.Provider('provider', {
-    kubeconfig: adminCredentials.apply((credentials) =>
-      Buffer.from(credentials.kubeconfigs[0]!.value, 'base64').toString(),
-    ),
-    enableServerSideApply: true,
-  });
   // create namespace
   const ns = new kubernetes.core.v1.Namespace(
     'external-dns',
@@ -96,7 +85,7 @@ export function setup(input: ExternalDnsArgs): void {
         name: 'external-dns',
       },
     },
-    { provider, dependsOn: [federatedIdentityCredential] },
+    { provider: input.provider, dependsOn: [federatedIdentityCredential] },
   );
   // create service account
   const sa = new kubernetes.core.v1.ServiceAccount(
@@ -111,7 +100,7 @@ export function setup(input: ExternalDnsArgs): void {
         },
       },
     },
-    { provider },
+    { provider: input.provider },
   );
   const role = new kubernetes.rbac.v1.ClusterRole(
     'external-dns-cluster-role',
@@ -149,7 +138,7 @@ export function setup(input: ExternalDnsArgs): void {
         },
       ],
     },
-    { provider },
+    { provider: input.provider },
   );
 
   const roleBinding = new kubernetes.rbac.v1.ClusterRoleBinding(
@@ -171,7 +160,7 @@ export function setup(input: ExternalDnsArgs): void {
         },
       ],
     },
-    { provider },
+    { provider: input.provider },
   );
 
   const azureCredentials = JSON.stringify({
@@ -192,7 +181,7 @@ export function setup(input: ExternalDnsArgs): void {
         'azure.json': Buffer.from(azureCredentials).toString('base64'),
       },
     },
-    { provider },
+    { provider: input.provider },
   );
 
   const deployment = new kubernetes.apps.v1.Deployment(
@@ -250,6 +239,6 @@ export function setup(input: ExternalDnsArgs): void {
         },
       },
     },
-    { provider },
+    { provider: input.provider },
   );
 }

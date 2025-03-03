@@ -11,8 +11,9 @@ export type ExternalDnsArgs = {
     | azure_native.network.GetPrivateZoneResult
     | azure_native.network.PrivateZone
   )[];
-  cluster: azure_native.containerservice.ManagedCluster;
   version?: string;
+  cluster: azure_native.containerservice.ManagedCluster;
+  provider: kubernetes.Provider;
 };
 export declare function setup(input: ExternalDnsArgs): void;
 //# sourceMappingURL=external-dns.d.ts.map

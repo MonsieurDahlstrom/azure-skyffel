@@ -7,22 +7,9 @@ export let chart: k8s.helm.v3.Chart;
 
 export type TraefikGatewayArgs = {
   version?: string;
-  cluster: azure_native.containerservice.ManagedCluster;
-  resourceGroupName: string | pulumi.Output<string>;
+  provider: kubernetes.Provider;
 };
 export function setup(input: TraefikGatewayArgs): void {
-  // create a provider
-  const adminCredentials =
-    azure_native.containerservice.listManagedClusterAdminCredentialsOutput({
-      resourceGroupName: input.resourceGroupName,
-      resourceName: input.cluster.name,
-    });
-  const provider = new kubernetes.Provider('provider', {
-    kubeconfig: adminCredentials.apply((credentials) =>
-      Buffer.from(credentials.kubeconfigs[0]!.value, 'base64').toString(),
-    ),
-    enableServerSideApply: true,
-  });
   const ns = new kubernetes.core.v1.Namespace(
     'traefik',
     {
@@ -30,7 +17,7 @@ export function setup(input: TraefikGatewayArgs): void {
         name: 'traefik',
       },
     },
-    { provider },
+    { provider: input.provider },
   );
   chart = new k8s.helm.v3.Chart(
     'traefik',
@@ -50,6 +37,6 @@ export function setup(input: TraefikGatewayArgs): void {
         },
       },
     },
-    { provider },
+    { provider: input.provider },
   );
 }
