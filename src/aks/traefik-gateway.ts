@@ -3,7 +3,8 @@ import * as pulumi from '@pulumi/pulumi';
 import * as azure_native from '@pulumi/azure-native';
 import * as kubernetes from '@pulumi/kubernetes';
 
-export let chart: k8s.helm.v3.Chart;
+export let chart: kubernetes.helm.v3.Chart;
+export let gateway: kubernetes.apiextensions.CustomResource;
 
 const traefikVersion = '3.3.4';
 const traefikHelmVersion = '34.4.0';
@@ -12,8 +13,14 @@ export type TraefikGatewayArgs = {
   version?: string;
   traefikVersion?: string;
   provider: kubernetes.Provider;
-  loadbalancerSubnetName: string | pulumi.Input<string>;
+  loadbalancerSubnetName: string | pulumi.Output<string>;
+  hostname: string;
+  tls: {
+    certificate: string | pulumi.Output<string>;
+    key: string | pulumi.Output<string>;
+  };
 };
+
 export function setup(input: TraefikGatewayArgs): void {
   const ns = new kubernetes.core.v1.Namespace(
     'traefik',
@@ -51,7 +58,7 @@ export function setup(input: TraefikGatewayArgs): void {
           tag: input.traefikVersion ? input.traefikVersion : traefikVersion,
         },
         gateway: {
-          enabled: true,
+          enabled: false,
         },
         providers: {
           kubernetesIngress: {
@@ -68,6 +75,64 @@ export function setup(input: TraefikGatewayArgs): void {
             experimentalChannel: false,
           },
         },
+      },
+    },
+    { provider: input.provider },
+  );
+
+  const tlsSecret = new kubernetes.core.v1.Secret(
+    'traefik-cert',
+    {
+      metadata: {
+        name: 'traefik-cert',
+        namespace: ns.metadata.name,
+      },
+      type: 'kubernetes.io/tls',
+      data: {
+        'tls.crt': input.tls.certificate,
+        'tls.key': input.tls.key,
+      },
+    },
+    { provider: input.provider },
+  );
+
+  gateway = new kubernetes.apiextensions.CustomResource(
+    'traefik-gateway',
+    {
+      apiVersion: 'gateway.networking.k8s.io/v1',
+      kind: 'Gateway',
+      metadata: {
+        name: 'traefik-gateway',
+        namespace: ns.metadata.name,
+      },
+      spec: {
+        gatewayClassName: 'traefik',
+        listeners: [
+          {
+            name: 'http',
+            protocol: 'HTTP',
+            port: 8000,
+            hostname: input.hostname,
+            allowedRoutes: {
+              namespaces: 'All',
+            },
+          },
+          {
+            name: 'https',
+            protocol: 'HTTPS',
+            port: 8443,
+            tls: {
+              mode: 'Terminate',
+              certificateRefs: {
+                secretName: tlsSecret.metadata.name,
+              },
+            },
+            hostname: input.hostname,
+            allowedRoutes: {
+              namespaces: 'All',
+            },
+          },
+        ],
       },
     },
     { provider: input.provider },
