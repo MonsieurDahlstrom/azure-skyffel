@@ -51,7 +51,7 @@ export function setup(input: TraefikGatewayArgs): void {
           tag: input.traefikVersion ? input.traefikVersion : traefikVersion,
         },
         gateway: {
-          enabled: false,
+          enabled: true,
         },
         providers: {
           kubernetesIngress: {
