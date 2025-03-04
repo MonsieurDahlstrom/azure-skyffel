@@ -51,6 +51,6 @@ export async function setup(input: KyvernoArgs): Promise<void> {
       },
       values: {},
     },
-    { provider: input.provider },
+    { provider: input.provider, dependsOn: [kyverno] },
   );
 }
