@@ -10,7 +10,7 @@ export type CoreAppliocationArgs = {
   provider: k8s.Provider;
   cluster: azure_native.containerservice.ManagedCluster;
   subscriptionId: string;
-  resourceGroupName: string;
+  resourceGroupName: string | pulumi.Output<string>;
   crossplane?: {
     version?: string;
     helmVersion?: string;
