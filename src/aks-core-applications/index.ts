@@ -5,6 +5,7 @@ import * as azure_native from '@pulumi/azure-native';
 import * as ExternalDNS from './external-dns';
 import * as TraefikGateway from './traefik-gateway';
 import * as Crossplane from './crossplane';
+import * as Kiverno from './kyverno';
 
 export type CoreAppliocationArgs = {
   provider: k8s.Provider;
@@ -36,6 +37,10 @@ export type CoreAppliocationArgs = {
       key: string | pulumi.Output<string>;
     };
   };
+  kyverno?: {
+    version?: string;
+    policiesVersion?: string;
+  };
 };
 
 export async function setup(input: CoreAppliocationArgs): Promise<void> {
@@ -65,6 +70,14 @@ export async function setup(input: CoreAppliocationArgs): Promise<void> {
   if (input.crossplane) {
     await Crossplane.setup({
       crossplaneHelmVersion: input.crossplane.helmVersion,
+      provider: input.provider,
+    });
+  }
+  //
+  if (input.kyverno) {
+    await Kiverno.setup({
+      kyvernoHelmVersion: input.kyverno.version,
+      policiesHelmVersion: input.kyverno.policiesVersion,
       provider: input.provider,
     });
   }

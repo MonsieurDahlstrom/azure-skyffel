@@ -31,6 +31,10 @@ export type CoreAppliocationArgs = {
       key: string | pulumi.Output<string>;
     };
   };
+  kyverno?: {
+    version?: string;
+    policiesVersion?: string;
+  };
 };
 export declare function setup(input: CoreAppliocationArgs): Promise<void>;
 //# sourceMappingURL=index.d.ts.map
