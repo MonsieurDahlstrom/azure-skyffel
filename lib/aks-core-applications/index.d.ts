@@ -7,7 +7,6 @@ export type CoreAppliocationArgs = {
   subscriptionId: string;
   resourceGroupName: string | pulumi.Output<string>;
   crossplane?: {
-    version?: string;
     helmVersion?: string;
   };
   externalDNS?: {

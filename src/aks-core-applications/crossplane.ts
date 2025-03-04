@@ -5,12 +5,10 @@ import * as kubernetes from '@pulumi/kubernetes';
 
 export let chart: kubernetes.helm.v3.Chart;
 
-const crossplaneVersion = '1.19.0';
 const crossplaneHelmVersion = '1.19.0';
 
 export type CrossPlaneArgs = {
   crossplaneHelmVersion?: string;
-  crossplaneVersion?: string;
   provider: kubernetes.Provider;
 };
 
@@ -37,13 +35,7 @@ export function setup(input: CrossPlaneArgs): void {
       fetchOpts: {
         repo: 'https://charts.crossplane.io/stable',
       },
-      values: {
-        image: {
-          tag: input.crossplaneVersion
-            ? input.crossplaneVersion
-            : crossplaneVersion,
-        },
-      },
+      values: {},
     },
     { provider: input.provider },
   );

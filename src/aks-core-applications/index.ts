@@ -12,7 +12,6 @@ export type CoreAppliocationArgs = {
   subscriptionId: string;
   resourceGroupName: string | pulumi.Output<string>;
   crossplane?: {
-    version?: string;
     helmVersion?: string;
   };
   externalDNS?: {
@@ -65,7 +64,6 @@ export async function setup(input: CoreAppliocationArgs): Promise<void> {
   //
   if (input.crossplane) {
     await Crossplane.setup({
-      crossplaneVersion: input.crossplane.version,
       crossplaneHelmVersion: input.crossplane.helmVersion,
       provider: input.provider,
     });
