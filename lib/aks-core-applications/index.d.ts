@@ -12,6 +12,7 @@ export type CoreAppliocationArgs = {
   };
   externalDNS?: {
     version?: string;
+    tenantId: string;
     zoneData: {
       subscriptionId: string;
       resourceGroupName: string;

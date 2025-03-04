@@ -17,6 +17,7 @@ export type CoreAppliocationArgs = {
   };
   externalDNS?: {
     version?: string;
+    tenantId: string;
     zoneData: {
       subscriptionId: string;
       resourceGroupName: string;
@@ -42,7 +43,7 @@ export async function setup(input: CoreAppliocationArgs): Promise<void> {
   if (input.externalDNS) {
     await ExternalDNS.setup({
       resourceGroupName: input.resourceGroupName,
-      tenantId: input.subscriptionId,
+      tenantId: input.externalDNS.tenantId,
       subscriptionId: input.subscriptionId,
       zoneData: input.externalDNS.zoneData,
       version: input.externalDNS.version,
