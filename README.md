@@ -1,7 +1,18 @@
 # azure-skyffle
 
-WIP
-A typescript WIP collection to build azure and cloudflare infrastructure with [Pulumi](https://pulumi.com)
+## idea
+
+A typescript WIP collection to build azure and cloudflare infrastructure with [Pulumi](https://pulumi.com).
+A common pattern when starting out with the gitops is to build a set of private cloud environments that accessible to employee and contracts via virtual wan and via WAF protected entrypoint for customers.
+
+- This repo provides a set of typescript building blocks to get someone started on such a journey.
+- Where Cloudflare is used as a zero trust network for employess and a WAF/CDN for customers.
+- Each environment is build in Azure, comprising of a kubernetes cluster for all deployed services, backed by Vault for shortlived credentials
+- Azure private dns zones are shared between environment and exposed in a central dns resolver enviroment
+- Application specific azure resources can be constructed with crossplane.
+
+## Prerequsits
+
 The sketches below expects a pulumi stack configured with cloudflare and azure-native providers via ESC. With the following configuration key set:
 
 ```yaml
@@ -189,7 +200,9 @@ export = async () => {
 };
 ```
 
-### AKS
+## AKS
+
+### AzureKubernetes
 
 Builds AKS with cilium and advanced container networking services to enable hubble.
 
@@ -229,6 +242,39 @@ export = async () => {
     subscriptionId: config.require('subscription-id'),
   });
 };
+```
+
+### AzureKubernetesApplications
+
+A set of applications installed in most of these cluster. External-DNS to manage private dns entries for httpresources created in cluster. Traefik to be Gateway manager for httpresources, ingress and ingressroutes are disabled. Kyverno and Crossplane installed to manage cloud resources.
+
+```typescript
+// ... SpokeDNS setup
+// ... AzureKubernetes setup
+await AzureKubernetesApplications.setup({
+  provider,
+  cluster: AzureKubernetes.cluster,
+  subscriptionId: config.require('subscription-id'),
+  resourceGroupName: resourceGroup.name,
+  externalDNS: {
+    tenantId: config.require('tenant-id'),
+    zoneData: {
+      subscriptionId: dnsSubscriptionId,
+      resourceGroupName: await dnsStack.getOutputValue('resourceGroupName'),
+      zones: [SpokeDNS.zones.get(`monsieurdahlstrom.dev`)!],
+    },
+  },
+  traefikGateway: {
+    loadbalancerSubnetName: 'kubernetes-loadbalancers',
+    hostname: `*.monsieurdahlstrom.dev`,
+    tls: {
+      certificate: certificate.apply((cert) => `${cert.certificateFullChain}`),
+      key: certificate.apply((cert) => `${cert.key}`),
+    },
+  },
+  crossplane: {},
+  kyverno: {},
+});
 ```
 
 ### Hashicorp Vault
