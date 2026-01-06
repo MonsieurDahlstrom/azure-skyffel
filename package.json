@@ -34,7 +34,7 @@
     "@types/jsbn": "^1.2.33",
     "@types/node": "^22.13.9",
     "prettier": "^3.5.3",
-    "semantic-release": "^24.2.3",
+    "semantic-release": "^25.0.2",
     "typescript": "^5.8.2",
     "vitest": "^3.0.7"
   },
