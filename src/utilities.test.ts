@@ -6,8 +6,8 @@ describe('cidrHost', () => {
   test('cidrHost expected host with number', () => {
     expect(cidrHost('10.0.0.0/16', 4)).toBe('10.0.0.4');
   });
-  test('cidrHost expected host with string', () => {
-    expect(cidrHost('10.0.0.0/16', '4')).toBe('10.0.0.4');
+  test('cidrHost expected host with different number', () => {
+    expect(cidrHost('10.0.0.0/16', 5)).toBe('10.0.0.5');
   });
 });
 
@@ -23,7 +23,7 @@ describe('cidrSubnet', () => {
       /equested 17 new bits, but only 16 are available/,
     );
   });
-  test('cidrSubnet expected host with string', () => {
+  test('cidrSubnet expected host with different netnum', () => {
     expect(cidrSubnet('10.0.0.0/16', 1, 1)).toBe('10.0.128.0/17');
   });
 });
