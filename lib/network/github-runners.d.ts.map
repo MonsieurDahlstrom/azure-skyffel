@@ -1,1 +1,0 @@
-{"version":3,"file":"github-runners.d.ts","sourceRoot":"","sources":["../../src/network/github-runners.ts"],"names":[],"mappings":"AACA,OAAO,EACL,cAAc,EACd,MAAM,EAGP,MAAM,8BAA8B,CAAC;AACtC,OAAO,EAAE,aAAa,EAAE,MAAM,gCAAgC,CAAC;AAW/D,wBAAgB,wBAAwB,CACtC,cAAc,EAAE,cAAc,EAC9B,aAAa,EAAE,aAAa,EAC5B,IAAI,EAAE,MAAM,EACZ,kBAAkB,EAAE,MAAM,GACzB,MAAM,CAsBR"}
